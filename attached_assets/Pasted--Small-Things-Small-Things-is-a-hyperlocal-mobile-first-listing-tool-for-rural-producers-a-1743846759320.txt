@@ -1,0 +1,111 @@
+# 🌱 Small Things
+
+**Small Things** is a hyperlocal, mobile-first listing tool for rural producers and casual sellers. It lets anyone create a one-page storefront — no login, no setup, just a shareable link.
+
+---
+
+## 🚀 Goal
+
+Empower flower farms, egg stands, bakers, and backyard growers to quickly share what's available today. Built for simplicity and mobile-first use.
+
+---
+
+## 👥 Who It's For
+
+- Rural and small-town producers
+- Casual sellers of handmade or homegrown goods
+- People who want a quick, no-fuss way to list items for pickup
+
+---
+
+## 🧰 Tech Stack
+
+| Layer        | Tech                            |
+| ------------ | ------------------------------- |
+| Frontend     | Vite + React + TypeScript       |
+| Styling      | Tailwind CSS + ShadCN UI        |
+| State (MVP)  | `localStorage`                  |
+| Backend (future) | Supabase (Postgres + RLS)  |
+| Hosting      | Replit (for MVP development)    |
+
+---
+
+## ✨ MVP Features
+
+### 🧾 Create Listing
+
+- Mobile-first form:
+  - **Title** (e.g., “Fresh eggs today”)
+  - **Optional description**
+  - **Items for sale** (simple list: name + price)
+  - **Pickup instructions**
+  - **Optional payment info** (e.g., "Cash or e-transfer to...")
+
+- On submit:
+  - Generates a public shareable page
+  - Creates a magic edit link stored in `localStorage`
+  - Shows confirmation screen with both links
+
+---
+
+### 🌍 Public View
+
+- Anyone with the URL sees:
+  - Listing title
+  - Items and prices
+  - Description and pickup instructions
+  - Payment options
+
+- Clean, mobile-first design
+
+---
+
+### ✏️ Edit with Magic Link
+
+- Edit mode accessed via `?edit=XYZ`
+- If token matches `localStorage`, user can edit the listing
+- Saves changes to `localStorage`
+
+---
+
+## 🧪 Testing the MVP
+
+1. Open in mobile browser
+2. Create a listing
+3. Share the public link — verify it’s view-only
+4. Open the magic link — verify edit access
+5. Clear localStorage — edit link no longer works
+
+---
+
+## 📦 Future Ideas (Post-MVP)
+
+- Add QR code sharing
+- Listing expiration / auto-hide after X days
+- Optional photo uploads
+- Pickup location map
+- Supabase for multi-device support
+
+---
+
+## 🎨 Design Principles
+
+- Mobile-first
+- Friendly, warm tone
+- No friction: no logins, no signups
+- Each screen = one clear action
+- Works with low-tech users in mind
+
+---
+
+## 🧑‍🌾 Example Use Case
+
+> Emily runs a small flower stand at the end of her driveway.  
+> She opens Small Things, creates a listing with “Fresh tulips today!” and adds cash payment info.  
+> She tapes the QR code to her stand and gets back to weeding.
+
+---
+
+## 💡 Want to Help?
+
+Right now, Small Things is a solo builder MVP. Feedback is welcome — just open an issue or leave a note.
