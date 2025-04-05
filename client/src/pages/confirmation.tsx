@@ -17,7 +17,15 @@ export default function Confirmation() {
   const listingId = parseInt(id, 10);
   const editToken = getListingToken(listingId);
   
-  const { data: listing = {} as Listing } = useQuery<Listing>({
+  const { data: listing = { 
+    id: listingId, 
+    title: "", 
+    description: "", 
+    items: [], 
+    pickupInstructions: "",
+    createdAt: new Date(),
+    editToken: "" 
+  } as Listing } = useQuery<Listing>({
     queryKey: [`/api/listings/${id}`],
     // The query will use the default queryFn from queryClient.ts
   });

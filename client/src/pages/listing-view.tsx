@@ -9,9 +9,10 @@ import { getListingToken, formatCurrency, updateListing } from "@/lib/listings";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Listing, Item } from "@/types/listing";
 
 export default function ListingView() {
-  const { id } = useParams();
+  const { id = "0" } = useParams();
   const [_, navigate] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -37,7 +38,16 @@ export default function ListingView() {
   });
   
   // Fetch the listing data
-  const { data: listing, isLoading, error } = useQuery({
+  const { data: listing = {
+    id: parseInt(id, 10),
+    title: "",
+    description: "",
+    items: [],
+    pickupInstructions: "",
+    paymentInfo: "",
+    createdAt: new Date(),
+    editToken: ""
+  } as Listing, isLoading, error } = useQuery<Listing>({
     queryKey: [`/api/listings/${id}`],
   });
   
