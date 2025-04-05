@@ -1,0 +1,236 @@
+import React, { useState } from "react";
+import { useLocation } from "wouter";
+import { Header } from "@/components/layout/header";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { ArrowLeft, Trash2 } from "lucide-react";
+import { useForm, Controller, useFieldArray } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useToast } from "@/hooks/use-toast";
+import { CreateListingForm, Item } from "@/types/listing";
+import { createListing } from "@/lib/listings";
+
+// Validation schema based on our shared schema
+const itemSchema = z.object({
+  name: z.string().min(1, "Item name is required"),
+  price: z.number().min(0, "Price must be a positive number"),
+});
+
+const createListingSchema = z.object({
+  title: z.string().min(3, "Title must be at least 3 characters"),
+  description: z.string().optional(),
+  items: z.array(itemSchema).min(1, "Add at least one item"),
+  pickupInstructions: z.string().min(5, "Pickup instructions are required"),
+  paymentInfo: z.string().optional(),
+});
+
+export default function CreateListing() {
+  const [_, navigate] = useLocation();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
+
+  // Form setup
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors },
+  } = useForm<CreateListingForm>({
+    resolver: zodResolver(createListingSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      items: [{ name: "", price: 0 }],
+      pickupInstructions: "",
+      paymentInfo: "",
+    }
+  });
+
+  // Item field array setup
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "items",
+  });
+
+  const onSubmit = async (data: CreateListingForm) => {
+    setIsSubmitting(true);
+    try {
+      const listing = await createListing(data);
+      navigate(`/confirmation/${listing.id}`);
+    } catch (error) {
+      console.error("Failed to create listing", error);
+      toast({
+        title: "Failed to create listing",
+        description: error instanceof Error ? error.message : "An error occurred",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="max-w-md mx-auto p-4 pb-16">
+      <div className="flex items-center mb-6">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="mr-2 text-neutral-600 hover:text-neutral-800"
+          onClick={() => navigate("/")}
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <h2 className="text-xl font-medium text-neutral-800">Create a listing</h2>
+      </div>
+      
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        {/* Listing Title */}
+        <div>
+          <Label htmlFor="title" className="text-sm font-medium text-neutral-700 mb-2 block">
+            Title
+          </Label>
+          <Input
+            id="title"
+            placeholder="e.g., Fresh eggs today"
+            {...register("title")}
+            className={errors.title ? "border-red-300" : ""}
+          />
+          {errors.title && (
+            <p className="text-sm text-red-500 mt-1">{errors.title.message}</p>
+          )}
+        </div>
+        
+        {/* Description */}
+        <div>
+          <Label htmlFor="description" className="text-sm font-medium text-neutral-700 mb-2 block">
+            Description (optional)
+          </Label>
+          <Textarea
+            id="description"
+            placeholder="Share details about what you're offering"
+            className="resize-none"
+            {...register("description")}
+          />
+        </div>
+        
+        {/* Items for Sale */}
+        <div>
+          <div className="flex justify-between items-center mb-2">
+            <Label className="text-sm font-medium text-neutral-700">
+              Items for sale
+            </Label>
+            <Button
+              type="button"
+              variant="link"
+              className="text-sm text-primary-500 hover:text-primary-600 font-medium p-0 h-auto"
+              onClick={() => append({ name: "", price: 0 })}
+            >
+              + Add item
+            </Button>
+          </div>
+          
+          <div className="space-y-3">
+            {fields.map((field, index) => (
+              <Card key={field.id} className="p-3">
+                <div className="flex space-x-3">
+                  <div className="flex-grow">
+                    <Input
+                      placeholder="Item name"
+                      className="mb-2"
+                      {...register(`items.${index}.name` as const)}
+                    />
+                    <div className="flex items-center">
+                      <span className="text-neutral-500 mr-2">$</span>
+                      <Controller
+                        control={control}
+                        name={`items.${index}.price` as const}
+                        render={({ field }) => (
+                          <Input
+                            type="number"
+                            placeholder="0.00"
+                            step="0.01"
+                            min="0"
+                            onChange={(e) => {
+                              const value = parseFloat(e.target.value);
+                              field.onChange(isNaN(value) ? 0 : value);
+                            }}
+                            value={field.value === 0 ? "" : field.value}
+                          />
+                        )}
+                      />
+                    </div>
+                    {errors.items?.[index]?.name && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {errors.items[index]?.name?.message}
+                      </p>
+                    )}
+                    {errors.items?.[index]?.price && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {errors.items[index]?.price?.message}
+                      </p>
+                    )}
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    disabled={fields.length <= 1}
+                    onClick={() => remove(index)}
+                    className="self-center text-neutral-400 hover:text-neutral-600 h-8 w-8"
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </Button>
+                </div>
+              </Card>
+            ))}
+          </div>
+          {errors.items && !Array.isArray(errors.items) && (
+            <p className="text-sm text-red-500 mt-1">{errors.items.message}</p>
+          )}
+        </div>
+        
+        {/* Pickup Instructions */}
+        <div>
+          <Label htmlFor="pickupInstructions" className="text-sm font-medium text-neutral-700 mb-2 block">
+            Pickup instructions
+          </Label>
+          <Textarea
+            id="pickupInstructions"
+            placeholder="e.g., Available at the end of my driveway from 2-6pm"
+            className="resize-none"
+            {...register("pickupInstructions")}
+          />
+          {errors.pickupInstructions && (
+            <p className="text-sm text-red-500 mt-1">{errors.pickupInstructions.message}</p>
+          )}
+        </div>
+        
+        {/* Payment Info */}
+        <div>
+          <Label htmlFor="paymentInfo" className="text-sm font-medium text-neutral-700 mb-2 block">
+            Payment info (optional)
+          </Label>
+          <Textarea
+            id="paymentInfo"
+            placeholder="e.g., Cash or e-transfer to..."
+            className="resize-none"
+            {...register("paymentInfo")}
+          />
+        </div>
+        
+        {/* Submit Button */}
+        <Button
+          type="submit"
+          className="w-full bg-primary-500 hover:bg-primary-600"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Creating..." : "Create listing"}
+        </Button>
+      </form>
+    </div>
+  );
+}
