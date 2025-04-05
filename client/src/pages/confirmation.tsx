@@ -3,12 +3,13 @@ import { useLocation, useParams } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { CheckIcon, Clipboard, Share } from "lucide-react";
+import { CheckIcon, Clipboard, Share, Edit, ArrowDown } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { getListingToken } from "@/lib/listings";
+import { getListingToken, formatCurrency } from "@/lib/listings";
+import { Listing, Item } from "@/types/listing";
 
 export default function Confirmation() {
-  const { id } = useParams();
+  const { id = "0" } = useParams();
   const [_, navigate] = useLocation();
   const { toast } = useToast();
   const [copied, setCopied] = useState("");
@@ -16,7 +17,7 @@ export default function Confirmation() {
   const listingId = parseInt(id, 10);
   const editToken = getListingToken(listingId);
   
-  const { data: listing } = useQuery({
+  const { data: listing = {} as Listing } = useQuery<Listing>({
     queryKey: [`/api/listings/${id}`],
     // The query will use the default queryFn from queryClient.ts
   });
@@ -128,6 +129,56 @@ export default function Confirmation() {
         </CardContent>
       </Card>
       
+      {/* Preview Section */}
+      <Card className="mb-6">
+        <CardContent className="p-6">
+          <h3 className="font-medium text-neutral-800 mb-4">Listing Preview</h3>
+          
+          <div className="mb-4">
+            <h4 className="text-lg font-medium text-neutral-800 mb-2">{listing.title}</h4>
+            {listing.description && <p className="text-neutral-600 mb-4">{listing.description}</p>}
+          
+            <div className="mb-4">
+              <h5 className="font-medium text-neutral-700 mb-2">Available items</h5>
+              <div>
+                {listing.items.map((item, index) => (
+                  <div
+                    key={index}
+                    className={`flex justify-between py-3 ${
+                      index !== listing.items.length - 1 ? "border-b border-neutral-200" : ""
+                    }`}
+                  >
+                    <span className="text-neutral-800">{item.name}</span>
+                    <span className="font-medium">{formatCurrency(item.price)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div>
+              <h5 className="font-medium text-neutral-700 mb-2">Pickup instructions</h5>
+              <div className="bg-neutral-50 rounded-md p-3">
+                <p className="text-neutral-700">{listing.pickupInstructions}</p>
+              </div>
+            </div>
+          </div>
+          
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => navigate(`/l/${listing.id}?edit=${editToken}`)}
+          >
+            <Edit className="h-4 w-4 mr-2" />
+            Edit this listing
+          </Button>
+          
+          <div className="mt-4 flex items-center justify-center">
+            <ArrowDown className="h-4 w-4 text-neutral-400" />
+          </div>
+        </CardContent>
+      </Card>
+      
+      {/* Edit Link Section */}
       <Card className="mb-6">
         <CardContent className="p-6">
           <h3 className="font-medium text-neutral-800 mb-2">Edit link (for you only)</h3>
