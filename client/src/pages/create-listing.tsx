@@ -225,7 +225,7 @@ export default function CreateListing() {
         {/* Submit Button */}
         <Button
           type="submit"
-          className="w-full bg-primary-500 hover:bg-primary-600"
+          className="w-full"
           disabled={isSubmitting}
         >
           {isSubmitting ? "Creating..." : "Create listing"}

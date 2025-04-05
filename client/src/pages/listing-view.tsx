@@ -161,7 +161,7 @@ export default function ListingView() {
   return (
     <div className="max-w-md mx-auto p-4 pb-16">
       {isEditMode && (
-        <div className="bg-primary-500 text-white text-center py-2 px-4 mb-4 rounded-md shadow-sm">
+        <div className="bg-primary text-primary-foreground text-center py-2 px-4 mb-4 rounded-md shadow-sm">
           <p className="text-sm">Edit mode enabled. Make changes and save when done.</p>
         </div>
       )}
@@ -300,7 +300,7 @@ export default function ListingView() {
         <div className="space-y-3">
           <Button 
             onClick={saveChanges}
-            className="w-full bg-primary-500 hover:bg-primary-600"
+            className="w-full"
             disabled={updateMutation.isPending}
           >
             {updateMutation.isPending ? "Saving..." : "Save changes"}
@@ -318,7 +318,7 @@ export default function ListingView() {
       
       {/* Listing Footer */}
       <div className="text-center text-sm text-neutral-500 mt-6">
-        <p>Created with <a href="/" className="text-primary-500 hover:text-primary-600">Small Things</a></p>
+        <p>Created with <a href="/" className="text-primary hover:text-primary/90">Small Things</a></p>
       </div>
     </div>
   );

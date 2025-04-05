@@ -25,7 +25,7 @@ export default function Home() {
             <div className="space-y-4">
               <Button 
                 variant="default" 
-                className="w-full bg-primary-500 hover:bg-primary-600"
+                className="w-full"
                 onClick={() => navigate("/create")}
               >
                 Create a listing
@@ -45,8 +45,8 @@ export default function Home() {
         <Card>
           <CardContent className="p-6">
             <div className="flex items-start space-x-4">
-              <div className="bg-primary-100 rounded-full p-2 mt-1">
-                <InfoIcon className="h-5 w-5 text-primary-500" />
+              <div className="bg-primary/10 rounded-full p-2 mt-1">
+                <InfoIcon className="h-5 w-5 text-primary" />
               </div>
               <div>
                 <h3 className="font-medium text-neutral-800 mb-2">How it works</h3>
