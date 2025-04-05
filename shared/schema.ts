@@ -32,6 +32,8 @@ export const createListingSchema = insertListingSchema.extend({
   items: z.array(itemSchema).min(1, "Add at least one item"),
   title: z.string().min(3, "Title must be at least 3 characters"),
   pickupInstructions: z.string().min(5, "Pickup instructions are required"),
+}).omit({
+  editToken: true, // Allow server to generate this
 });
 
 export type InsertListing = z.infer<typeof insertListingSchema>;

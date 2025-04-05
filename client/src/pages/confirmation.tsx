@@ -84,7 +84,7 @@ export default function Confirmation() {
   return (
     <div className="max-w-md mx-auto p-4 pb-16">
       <div className="mb-8 text-center">
-        <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-primary-100 text-primary-500 mb-4">
+        <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-primary/10 text-primary mb-4">
           <CheckIcon className="h-8 w-8" />
         </div>
         <h2 className="text-xl font-medium text-neutral-800 mb-2">Listing created!</h2>
@@ -162,7 +162,7 @@ export default function Confirmation() {
       <div className="flex justify-center">
         <Button
           variant="link"
-          className="text-primary-500 hover:text-primary-600 font-medium"
+          className="text-primary hover:text-primary/90 font-medium"
           onClick={() => navigate("/")}
         >
           Back to home
