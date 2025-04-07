@@ -98,14 +98,14 @@ export default function Home() {
             </div>
           </div>
           
-          {/* Filter button always right-aligned */}
-          <div className="pl-2 flex-shrink-0">
+          {/* Filter button always right-aligned with a keyline */}
+          <div className="pl-3 ml-2 flex-shrink-0 border-l border-neutral-200 flex items-center h-10">
             <Button 
-              variant="outline"
-              className="whitespace-nowrap"
+              variant="ghost"
+              className="flex items-center gap-2"
               onClick={() => {/* Would open filter modal */}}
             >
-              <Filter className="h-4 w-4 mr-2" />
+              <Filter className="h-4 w-4" />
               Filters
             </Button>
           </div>
