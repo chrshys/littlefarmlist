@@ -20,7 +20,8 @@ export default function Home() {
   
   // Popular categories - these would be dynamically generated based on listing data
   const categories = [
-    "Discover", "Popular", "Fruits", "Vegetables", "Eggs", "Dairy", "Baked Goods", "Crafts"
+    "Discover", "Popular", "Fruits", "Vegetables", "Eggs", "Dairy", "Baked Goods", "Crafts",
+    "Meat", "Preserves", "Beer", "Wine", "Flowers", "Pantry", "Prepared Meals"
   ];
   
   // Trending searches - these would be dynamically generated based on user behavior
