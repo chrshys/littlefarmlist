@@ -2,11 +2,14 @@ import React, { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Edit, Share, Trash2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Edit, Share, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueries } from "@tanstack/react-query";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { getMyListings, formatDate, deleteListing } from "@/lib/listings";
+import { getMyListings, formatDate, deleteListing, formatCurrency } from "@/lib/listings";
+import { Header } from "@/components/layout/header";
 import { Listing } from "@/types/listing";
 
 export default function MyListings() {
@@ -31,7 +34,7 @@ export default function MyListings() {
   
   // Extract listings data and loading states
   const isLoading = listingQueries.some(query => query.isLoading);
-  const listings = listingQueries
+  const myListings = listingQueries
     .filter(query => query.data)
     .map(query => query.data as Listing)
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -97,101 +100,22 @@ export default function MyListings() {
 
   return (
     <div className="max-w-md mx-auto p-4 pb-16">
-      <div className="flex items-center mb-6">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="mr-2 text-neutral-600 hover:text-neutral-800"
-          onClick={() => navigate("/")}
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
+      <Header />
+      
+      <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-medium text-neutral-800">My listings</h2>
+        <div className="text-xs text-neutral-500">Sorted by date</div>
       </div>
       
       {isLoading && (
-        <div className="animate-pulse space-y-4">
-          <div className="h-24 bg-gray-200 rounded"></div>
-          <div className="h-24 bg-gray-200 rounded"></div>
-        </div>
-      )}
-      
-      {!isLoading && listings.length > 0 && (
         <div className="space-y-4">
-          {listings.map(listing => (
-            <Card key={listing.id} className="p-4">
-              <div className="flex justify-between items-start mb-3">
-                <div>
-                  <h3 className="font-medium text-neutral-800">{listing.title}</h3>
-                  <p className="text-sm text-neutral-500">
-                    Created {formatDate(listing.createdAt)}
-                  </p>
-                </div>
-                <div className="flex space-x-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-neutral-500 hover:text-neutral-700 h-8 w-8"
-                    onClick={() => handleEdit(listing.id, listing.editToken)}
-                  >
-                    <Edit className="h-5 w-5" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-neutral-500 hover:text-neutral-700 h-8 w-8"
-                    onClick={() => handleShare(listing)}
-                  >
-                    <Share className="h-5 w-5" />
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-neutral-500 hover:text-red-500 h-8 w-8"
-                      >
-                        <Trash2 className="h-5 w-5" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete listing</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to delete this listing? This action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => handleDelete(listing.id, listing.editToken)}
-                          className="bg-red-500 hover:bg-red-600"
-                        >
-                          {isDeleting === listing.id ? "Deleting..." : "Delete"}
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-neutral-600">
-                  {listing.items.length} item{listing.items.length !== 1 && 's'}
-                </span>
-                <Button
-                  variant="link"
-                  className="text-primary-500 hover:text-primary-600 p-0 h-auto"
-                  onClick={() => navigate(`/l/${listing.id}`)}
-                >
-                  View listing
-                </Button>
-              </div>
-            </Card>
-          ))}
+          <Skeleton className="h-40 w-full" />
+          <Skeleton className="h-40 w-full" />
+          <Skeleton className="h-40 w-full" />
         </div>
       )}
       
-      {!isLoading && listings.length === 0 && (
+      {!isLoading && myListings.length === 0 && (
         <div className="text-center py-8">
           <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-neutral-100 text-neutral-400 mb-4">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -208,6 +132,105 @@ export default function MyListings() {
           >
             Create a listing
           </Button>
+        </div>
+      )}
+      
+      {!isLoading && myListings.length > 0 && (
+        <div className="space-y-4">
+          {myListings.map(listing => (
+            <Card key={listing.id} className="overflow-hidden">
+              <CardContent className="p-0">
+                <div className="p-4">
+                  <div className="flex justify-between items-start mb-1">
+                    <h3 className="font-medium text-lg text-neutral-800">
+                      {listing.title}
+                    </h3>
+                    <Badge variant="secondary" className="text-xs">
+                      {listing.items.length} {listing.items.length === 1 ? 'item' : 'items'}
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-neutral-500 mb-3">
+                    {formatDate(listing.createdAt)}
+                  </p>
+                  
+                  {listing.description && (
+                    <p className="text-neutral-700 text-sm mb-3 line-clamp-2">
+                      {listing.description}
+                    </p>
+                  )}
+                  
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {listing.items.slice(0, 3).map((item, index) => (
+                      <Badge key={index} variant="outline" className="text-xs bg-neutral-50">
+                        {item.name} – {formatCurrency(item.price)}
+                      </Badge>
+                    ))}
+                    {listing.items.length > 3 && (
+                      <Badge variant="outline" className="text-xs bg-neutral-50">
+                        +{listing.items.length - 3} more
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="border-t border-neutral-100 px-4 py-3 bg-neutral-50 flex justify-between">
+                  <div className="flex space-x-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-neutral-500 hover:text-neutral-700 h-8 w-8"
+                      onClick={() => handleEdit(listing.id, listing.editToken)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-neutral-500 hover:text-neutral-700 h-8 w-8"
+                      onClick={() => handleShare(listing)}
+                    >
+                      <Share className="h-4 w-4" />
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-neutral-500 hover:text-red-500 h-8 w-8"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete listing</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete this listing? This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDelete(listing.id, listing.editToken)}
+                            className="bg-red-500 hover:bg-red-600"
+                          >
+                            {isDeleting === listing.id ? "Deleting..." : "Delete"}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                  <Button
+                    variant="link"
+                    className="text-primary-500 hover:text-primary-600 p-0 h-auto"
+                    onClick={() => navigate(`/l/${listing.id}`)}
+                  >
+                    View details
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       )}
     </div>
