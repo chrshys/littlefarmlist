@@ -7,15 +7,15 @@ export function Header() {
 
   return (
     <header className="mb-6">
-      <Link href="/">
-        <div className="inline-flex items-center justify-center cursor-pointer mb-3">
-          <div className="flex items-center justify-center">
+      <div className="flex flex-col items-center">
+        <Link href="/">
+          <div className="flex items-center justify-center cursor-pointer mb-3">
             <Sprout className="h-7 w-7 text-primary-500 mr-2" />
             <h1 className="text-2xl font-medium text-neutral-800">Small Things</h1>
           </div>
-        </div>
-      </Link>
-      <p className="text-neutral-500 text-sm text-center mb-4">Hyperlocal listings for local goods</p>
+        </Link>
+        <p className="text-neutral-500 text-sm text-center mb-4">Hyperlocal listings for local goods</p>
+      </div>
       
       <nav className="flex justify-center">
         <div className="inline-flex items-center border border-neutral-200 rounded-lg overflow-hidden divide-x">
