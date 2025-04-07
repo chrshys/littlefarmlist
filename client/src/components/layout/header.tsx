@@ -19,21 +19,15 @@ export function Header() {
       
       <nav className="flex justify-center">
         <div className="inline-flex items-center border border-neutral-200 rounded-lg overflow-hidden divide-x">
-          <Link href="/">
-            <a className={`px-3 py-2 text-sm ${location === '/' ? 'bg-primary-50 text-primary-500 font-medium' : 'text-neutral-600 hover:bg-neutral-50'}`}>
-              Home
-            </a>
-          </Link>
-          <Link href="/popular">
-            <a className={`px-3 py-2 text-sm ${location === '/popular' ? 'bg-primary-50 text-primary-500 font-medium' : 'text-neutral-600 hover:bg-neutral-50'}`}>
-              Popular
-            </a>
-          </Link>
-          <Link href="/my-listings">
-            <a className={`px-3 py-2 text-sm ${location === '/my-listings' ? 'bg-primary-50 text-primary-500 font-medium' : 'text-neutral-600 hover:bg-neutral-50'}`}>
-              My Listings
-            </a>
-          </Link>
+          <div className={`px-3 py-2 text-sm ${location === '/' ? 'bg-primary-50 text-primary-500 font-medium' : 'text-neutral-600 hover:bg-neutral-50'}`}>
+            <Link href="/">Home</Link>
+          </div>
+          <div className={`px-3 py-2 text-sm ${location === '/popular' ? 'bg-primary-50 text-primary-500 font-medium' : 'text-neutral-600 hover:bg-neutral-50'}`}>
+            <Link href="/popular">Popular</Link>
+          </div>
+          <div className={`px-3 py-2 text-sm ${location === '/my-listings' ? 'bg-primary-50 text-primary-500 font-medium' : 'text-neutral-600 hover:bg-neutral-50'}`}>
+            <Link href="/my-listings">My Listings</Link>
+          </div>
         </div>
       </nav>
     </header>

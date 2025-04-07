@@ -3,7 +3,7 @@ import { useParams, useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Pencil, Save, X } from "lucide-react";
+import { Pencil, Save, X, ArrowLeft } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getListingToken, formatCurrency, updateListing } from "@/lib/listings";
 import { Input } from "@/components/ui/input";
@@ -144,11 +144,11 @@ export default function ListingView() {
 
   if (isLoading) {
     return (
-      <div className="max-w-md mx-auto p-4 pb-16">
+      <div className="max-w-lg mx-auto px-4 pb-16 w-full">
         <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-3/4"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-          <div className="h-32 bg-gray-200 rounded"></div>
+          <div className="h-8 bg-gray-200 rounded-lg w-3/4"></div>
+          <div className="h-4 bg-gray-200 rounded-lg w-1/2"></div>
+          <div className="h-32 bg-gray-200 rounded-lg"></div>
         </div>
       </div>
     );
@@ -156,12 +156,12 @@ export default function ListingView() {
 
   if (error || !listing) {
     return (
-      <div className="max-w-md mx-auto p-4 pb-16 text-center">
+      <div className="max-w-lg mx-auto px-4 pb-16 w-full text-center">
         <h2 className="text-xl font-medium text-neutral-800 mb-4">Listing not found</h2>
         <p className="text-neutral-600 mb-4">
           The listing you're looking for might have been removed or is no longer available.
         </p>
-        <Button onClick={() => navigate("/")} className="bg-primary-500 hover:bg-primary-600">
+        <Button onClick={() => navigate("/")} className="py-4 px-6">
           Go back home
         </Button>
       </div>
@@ -169,15 +169,27 @@ export default function ListingView() {
   }
 
   return (
-    <div className="max-w-md mx-auto p-4 pb-16">
+    <div className="max-w-lg mx-auto px-4 pb-16 w-full">
       {isEditMode && (
         <div className="bg-primary text-primary-foreground text-center py-2 px-4 mb-4 rounded-md shadow-sm">
           <p className="text-sm">Edit mode enabled. Make changes and save when done.</p>
         </div>
       )}
       
-      <Card className="mb-6">
-        <CardContent className="p-6">
+      <div className="mb-4">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="flex items-center gap-1 text-neutral-600 hover:text-neutral-800 -ml-2"
+          onClick={() => navigate(-1)}
+        >
+          <ArrowLeft className="h-4 w-4" />
+          <span>Back</span>
+        </Button>
+      </div>
+      
+      <Card className="mb-6 shadow-sm">
+        <CardContent className="p-4 sm:p-6">
           {/* Listing Header */}
           <div className="mb-6">
             {isEditMode ? (
@@ -195,12 +207,12 @@ export default function ListingView() {
                   id="edit-description"
                   value={editForm.description}
                   onChange={(e) => handleFormChange('description', e.target.value)}
-                  className="resize-none"
+                  className="resize-none min-h-[100px]"
                 />
               </>
             ) : (
               <>
-                <h2 className="text-xl font-medium text-neutral-800 mb-2">{listing.title}</h2>
+                <h2 className="text-xl sm:text-2xl font-medium text-neutral-800 mb-2">{listing.title}</h2>
                 {listing.description && <p className="text-neutral-600">{listing.description}</p>}
               </>
             )}
@@ -213,14 +225,14 @@ export default function ListingView() {
             {isEditMode ? (
               <div className="space-y-3 mb-3">
                 {editForm.items.map((item, index) => (
-                  <div key={index} className="flex items-center justify-between space-x-2">
+                  <div key={index} className="flex flex-col sm:flex-row gap-2 sm:items-center pb-2 border-b border-neutral-100">
                     <Input
                       value={item.name}
                       onChange={(e) => handleItemChange(index, 'name', e.target.value)}
                       placeholder="Item name"
                       className="flex-grow"
                     />
-                    <div className="flex items-center w-24">
+                    <div className="flex items-center w-full sm:w-24">
                       <span className="text-neutral-500 mr-1">$</span>
                       <Input
                         type="number"
@@ -235,7 +247,7 @@ export default function ListingView() {
                       variant="ghost"
                       size="icon"
                       onClick={() => removeItem(index)}
-                      className="h-8 w-8"
+                      className="h-8 w-8 ml-auto"
                       disabled={editForm.items.length <= 1}
                     >
                       <X className="h-4 w-4" />
@@ -246,13 +258,13 @@ export default function ListingView() {
                   variant="outline"
                   onClick={addItem}
                   size="sm"
-                  className="mt-2"
+                  className="mt-3"
                 >
                   + Add item
                 </Button>
               </div>
             ) : (
-              <div>
+              <div className="bg-white rounded-md">
                 {listing.items.map((item, index) => (
                   <div
                     key={index}
@@ -276,11 +288,11 @@ export default function ListingView() {
               <Textarea
                 value={editForm.pickupInstructions}
                 onChange={(e) => handleFormChange('pickupInstructions', e.target.value)}
-                className="resize-none"
+                className="resize-none min-h-[100px]"
               />
             ) : (
               <div className="bg-neutral-50 rounded-md p-3">
-                <p className="text-neutral-700">{listing.pickupInstructions}</p>
+                <p className="text-neutral-700 whitespace-pre-wrap">{listing.pickupInstructions}</p>
               </div>
             )}
           </div>
@@ -294,11 +306,11 @@ export default function ListingView() {
                 <Textarea
                   value={editForm.paymentInfo}
                   onChange={(e) => handleFormChange('paymentInfo', e.target.value)}
-                  className="resize-none"
+                  className="resize-none min-h-[80px]"
                   placeholder="e.g., Cash or e-transfer to..."
                 />
               ) : (
-                <p className="text-neutral-600">{listing.paymentInfo}</p>
+                <p className="text-neutral-600 whitespace-pre-wrap">{listing.paymentInfo}</p>
               )}
             </div>
           )}
@@ -310,7 +322,7 @@ export default function ListingView() {
         <div className="space-y-3">
           <Button 
             onClick={saveChanges}
-            className="w-full"
+            className="w-full py-5"
             disabled={updateMutation.isPending}
           >
             {updateMutation.isPending ? "Saving..." : "Save changes"}
@@ -318,7 +330,7 @@ export default function ListingView() {
           <Button 
             variant="outline" 
             onClick={cancelEdit}
-            className="w-full"
+            className="w-full py-5"
             disabled={updateMutation.isPending}
           >
             Cancel

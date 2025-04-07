@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Edit, Share, Trash2 } from "lucide-react";
+import { Edit, Share, Trash2, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueries } from "@tanstack/react-query";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -99,26 +99,34 @@ export default function MyListings() {
   };
 
   return (
-    <div className="max-w-md mx-auto p-4 pb-16">
+    <div className="max-w-lg mx-auto px-4 pb-16 w-full">
       <Header />
       
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-medium text-neutral-800">My listings</h2>
-        <div className="text-xs text-neutral-500">Sorted by date</div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => navigate("/create")}
+          className="flex items-center gap-1 text-xs"
+        >
+          <Plus className="h-3 w-3" />
+          New listing
+        </Button>
       </div>
       
       {isLoading && (
         <div className="space-y-4">
-          <Skeleton className="h-40 w-full" />
-          <Skeleton className="h-40 w-full" />
-          <Skeleton className="h-40 w-full" />
+          <Skeleton className="h-40 w-full rounded-lg" />
+          <Skeleton className="h-40 w-full rounded-lg" />
+          <Skeleton className="h-40 w-full rounded-lg" />
         </div>
       )}
       
       {!isLoading && myListings.length === 0 && (
         <div className="text-center py-8">
-          <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-neutral-100 text-neutral-400 mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="inline-flex items-center justify-center h-14 w-14 rounded-full bg-neutral-100 text-neutral-400 mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
           </div>
@@ -128,7 +136,7 @@ export default function MyListings() {
           </p>
           <Button
             onClick={() => navigate("/create")}
-            className="bg-primary-500 hover:bg-primary-600"
+            className="py-5 px-6"
           >
             Create a listing
           </Button>
@@ -138,14 +146,14 @@ export default function MyListings() {
       {!isLoading && myListings.length > 0 && (
         <div className="space-y-4">
           {myListings.map(listing => (
-            <Card key={listing.id} className="overflow-hidden">
+            <Card key={listing.id} className="overflow-hidden shadow-sm hover:shadow transition-shadow">
               <CardContent className="p-0">
-                <div className="p-4">
-                  <div className="flex justify-between items-start mb-1">
-                    <h3 className="font-medium text-lg text-neutral-800">
+                <div className="p-4 sm:p-5">
+                  <div className="flex justify-between items-start mb-1 gap-2">
+                    <h3 className="font-medium text-lg text-neutral-800 line-clamp-1">
                       {listing.title}
                     </h3>
-                    <Badge variant="secondary" className="text-xs">
+                    <Badge variant="secondary" className="text-xs flex-shrink-0">
                       {listing.items.length} {listing.items.length === 1 ? 'item' : 'items'}
                     </Badge>
                   </div>
@@ -173,43 +181,46 @@ export default function MyListings() {
                   </div>
                 </div>
                 
-                <div className="border-t border-neutral-100 px-4 py-3 bg-neutral-50 flex justify-between">
-                  <div className="flex space-x-1">
+                <div className="border-t border-neutral-100 px-4 py-3 bg-neutral-50 grid sm:flex sm:justify-between gap-3">
+                  <div className="flex justify-center sm:justify-start gap-2 sm:gap-1">
                     <Button
                       variant="ghost"
-                      size="icon"
-                      className="text-neutral-500 hover:text-neutral-700 h-8 w-8"
+                      size="sm"
+                      className="text-neutral-500 hover:text-neutral-700 h-9 flex items-center gap-1"
                       onClick={() => handleEdit(listing.id, listing.editToken)}
                     >
                       <Edit className="h-4 w-4" />
+                      <span className="sm:hidden text-xs">Edit</span>
                     </Button>
                     <Button
                       variant="ghost"
-                      size="icon"
-                      className="text-neutral-500 hover:text-neutral-700 h-8 w-8"
+                      size="sm"
+                      className="text-neutral-500 hover:text-neutral-700 h-9 flex items-center gap-1"
                       onClick={() => handleShare(listing)}
                     >
                       <Share className="h-4 w-4" />
+                      <span className="sm:hidden text-xs">Share</span>
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button
                           variant="ghost"
-                          size="icon"
-                          className="text-neutral-500 hover:text-red-500 h-8 w-8"
+                          size="sm"
+                          className="text-neutral-500 hover:text-red-500 h-9 flex items-center gap-1"
                         >
                           <Trash2 className="h-4 w-4" />
+                          <span className="sm:hidden text-xs">Delete</span>
                         </Button>
                       </AlertDialogTrigger>
-                      <AlertDialogContent>
+                      <AlertDialogContent className="max-w-[90vw] sm:max-w-lg">
                         <AlertDialogHeader>
                           <AlertDialogTitle>Delete listing</AlertDialogTitle>
                           <AlertDialogDescription>
                             Are you sure you want to delete this listing? This action cannot be undone.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+                          <AlertDialogCancel className="mt-0">Cancel</AlertDialogCancel>
                           <AlertDialogAction
                             onClick={() => handleDelete(listing.id, listing.editToken)}
                             className="bg-red-500 hover:bg-red-600"
@@ -221,8 +232,9 @@ export default function MyListings() {
                     </AlertDialog>
                   </div>
                   <Button
-                    variant="link"
-                    className="text-primary-500 hover:text-primary-600 p-0 h-auto"
+                    variant="outline"
+                    size="sm"
+                    className="text-primary hover:text-primary/90 hover:bg-primary/5"
                     onClick={() => navigate(`/l/${listing.id}`)}
                   >
                     View details
