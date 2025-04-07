@@ -17,10 +17,15 @@ export default function PopularListings() {
     queryKey: ['/api/listings'],
   });
   
-  // Sort listings by creation date (newest first)
-  const sortedListings = [...listings].sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  );
+  // Sort listings by popularity (number of items, then by creation date)
+  const sortedListings = [...listings].sort((a, b) => {
+    // Primary sort: number of items (more items = more popular)
+    if (b.items.length !== a.items.length) {
+      return b.items.length - a.items.length;
+    }
+    // Secondary sort: creation date (newer = more popular)
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
   
   return (
     <div className="max-w-md mx-auto p-4 pb-16">
@@ -28,6 +33,7 @@ export default function PopularListings() {
       
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-medium text-neutral-800">Popular listings</h2>
+        <div className="text-xs text-neutral-500">Sorted by item count</div>
       </div>
       
       {isLoading && (
@@ -73,9 +79,14 @@ export default function PopularListings() {
             <Card key={listing.id} className="overflow-hidden">
               <CardContent className="p-0">
                 <div className="p-4">
-                  <h3 className="font-medium text-lg text-neutral-800 mb-1">
-                    {listing.title}
-                  </h3>
+                  <div className="flex justify-between items-start mb-1">
+                    <h3 className="font-medium text-lg text-neutral-800">
+                      {listing.title}
+                    </h3>
+                    <Badge variant="secondary" className="text-xs">
+                      {listing.items.length} {listing.items.length === 1 ? 'item' : 'items'}
+                    </Badge>
+                  </div>
                   <p className="text-sm text-neutral-500 mb-3">
                     {formatDate(listing.createdAt)}
                   </p>
