@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Trash2 } from "lucide-react";
+import { ArrowLeft, Trash2, MapPin } from "lucide-react";
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -26,12 +26,12 @@ const coordinatesSchema = z.object({
 });
 
 const createListingSchema = z.object({
+  address: z.string().min(5, "Address is required"),
   title: z.string().min(3, "Title must be at least 3 characters"),
   description: z.string().optional(),
   items: z.array(itemSchema).min(1, "Add at least one item"),
   pickupInstructions: z.string().min(5, "Pickup instructions are required"),
   paymentInfo: z.string().optional(),
-  address: z.string().min(5, "Address is required"),
   coordinates: coordinatesSchema.optional(),
 });
 
@@ -96,6 +96,25 @@ export default function CreateListing() {
       </div>
       
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        {/* Location/Address */}
+        <div>
+          <Label htmlFor="address" className="text-sm font-medium text-neutral-700 mb-2 flex items-center">
+            Farm Address <MapPin className="h-4 w-4 ml-1 text-primary-500" />
+          </Label>
+          <Input
+            id="address"
+            placeholder="e.g., 123 Farm Road, Rural County"
+            {...register("address")}
+            className={errors.address ? "border-red-300" : ""}
+          />
+          {errors.address && (
+            <p className="text-sm text-red-500 mt-1">{errors.address.message}</p>
+          )}
+          <p className="text-xs text-neutral-500 mt-1">
+            This address will be shown on the map to help buyers find your farm
+          </p>
+        </div>
+
         {/* Listing Title */}
         <div>
           <Label htmlFor="title" className="text-sm font-medium text-neutral-700 mb-2 block">
@@ -228,25 +247,6 @@ export default function CreateListing() {
             className="resize-none"
             {...register("paymentInfo")}
           />
-        </div>
-        
-        {/* Location/Address */}
-        <div>
-          <Label htmlFor="address" className="text-sm font-medium text-neutral-700 mb-2 block">
-            Address
-          </Label>
-          <Input
-            id="address"
-            placeholder="e.g., 123 Farm Road, Rural County"
-            {...register("address")}
-            className={errors.address ? "border-red-300" : ""}
-          />
-          {errors.address && (
-            <p className="text-sm text-red-500 mt-1">{errors.address.message}</p>
-          )}
-          <p className="text-xs text-neutral-500 mt-1">
-            This address will be displayed on the map to help buyers find your items
-          </p>
         </div>
         
         {/* Submit Button */}

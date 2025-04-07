@@ -3,7 +3,9 @@ import {
   listings,
   type Listing,
   type InsertListing,
-  type CreateListing
+  type CreateListing, 
+  type Item,
+  type Coordinates
 } from "@shared/schema";
 
 // Storage interface
@@ -32,14 +34,17 @@ export class MemStorage implements IStorage {
     const createdAt = new Date();
     
     const listing: Listing = {
-      ...listingData,
       id,
-      editToken,
-      createdAt,
+      title: listingData.title,
       description: listingData.description || null,
+      // Ensure items is properly typed
+      items: listingData.items as Item[],
+      pickupInstructions: listingData.pickupInstructions,
       paymentInfo: listingData.paymentInfo || null,
-      address: listingData.address || null,
-      coordinates: listingData.coordinates || null
+      address: listingData.address,
+      coordinates: listingData.coordinates || null,
+      createdAt,
+      editToken
     };
     
     this.listings.set(id, listing);
@@ -67,18 +72,18 @@ export class MemStorage implements IStorage {
       return undefined;
     }
     
-    // Handle null/undefined conversions
-    const processedUpdate = {
-      ...listingUpdate,
+    // Create a fresh updated listing with proper typing
+    const updatedListing: Listing = {
+      id: listing.id,
+      title: listingUpdate.title ?? listing.title,
       description: listingUpdate.description ?? listing.description,
+      items: (listingUpdate.items as Item[] | undefined) ?? listing.items,
+      pickupInstructions: listingUpdate.pickupInstructions ?? listing.pickupInstructions,
       paymentInfo: listingUpdate.paymentInfo ?? listing.paymentInfo,
       address: listingUpdate.address ?? listing.address,
-      coordinates: listingUpdate.coordinates ?? listing.coordinates
-    };
-    
-    const updatedListing: Listing = {
-      ...listing,
-      ...processedUpdate,
+      coordinates: listingUpdate.coordinates ?? listing.coordinates,
+      createdAt: listing.createdAt,
+      editToken: listing.editToken
     };
     
     this.listings.set(id, updatedListing);

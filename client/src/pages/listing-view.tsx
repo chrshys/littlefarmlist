@@ -181,7 +181,7 @@ export default function ListingView() {
           variant="ghost" 
           size="sm" 
           className="flex items-center gap-1 text-neutral-600 hover:text-neutral-800 -ml-2"
-          onClick={() => navigate(-1)}
+          onClick={() => window.history.back()}
         >
           <ArrowLeft className="h-4 w-4" />
           <span>Back</span>
