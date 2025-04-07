@@ -80,26 +80,32 @@ export default function Home() {
           <h2 className="text-xl font-semibold">Browse by category</h2>
         </div>
         
-        <div className="flex overflow-x-auto gap-2 pb-2 hide-scrollbar">
-          {categories.map((category, index) => (
-            <Button 
-              key={index}
-              variant={index === 0 ? "secondary" : "outline"}
-              className="whitespace-nowrap"
-              onClick={() => {/* Would filter by category */}}
-            >
-              {category}
-            </Button>
-          ))}
+        <div className="relative">
+          {/* Scrollable categories container with right padding for filter button */}
+          <div className="flex overflow-x-auto gap-2 pb-2 hide-scrollbar pr-[100px]">
+            {categories.map((category, index) => (
+              <Button 
+                key={index}
+                variant={index === 0 ? "secondary" : "outline"}
+                className="whitespace-nowrap"
+                onClick={() => {/* Would filter by category */}}
+              >
+                {category}
+              </Button>
+            ))}
+          </div>
           
-          <Button 
-            variant="outline"
-            className="whitespace-nowrap ml-1"
-            onClick={() => {/* Would open filter modal */}}
-          >
-            <Filter className="h-4 w-4 mr-2" />
-            Filters
-          </Button>
+          {/* Sticky filter button positioned on the right */}
+          <div className="absolute right-0 top-0 bg-background/95 pl-2 h-full flex items-center sticky-filter">
+            <Button 
+              variant="outline"
+              className="whitespace-nowrap"
+              onClick={() => {/* Would open filter modal */}}
+            >
+              <Filter className="h-4 w-4 mr-2" />
+              Filters
+            </Button>
+          </div>
         </div>
       </section>
       

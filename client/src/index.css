@@ -49,6 +49,14 @@
     -ms-overflow-style: none;  /* IE and Edge */
     scrollbar-width: none;  /* Firefox */
   }
+  
+  /* Sticky filter button right-aligned in category list */
+  .sticky-filter {
+    position: sticky;
+    right: 0;
+    z-index: 10;
+    box-shadow: -8px 0 10px -5px rgba(0, 0, 0, 0.05);
+  }
 }
 
 /* Map specific styles */
