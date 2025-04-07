@@ -33,7 +33,7 @@ export default function Home() {
       {/* Hero Section */}
       <section className="mb-12 text-center">
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-neutral-900 mb-4">
-          Discover local products<br /> from your neighbors
+          Discover local products<br /> from your neighbours
         </h1>
         <p className="text-lg text-neutral-600 max-w-2xl mx-auto mb-8">
           Find and purchase locally grown produce and handmade goods 
@@ -84,7 +84,7 @@ export default function Home() {
           {categories.map((category, index) => (
             <Button 
               key={index}
-              variant={index === 0 ? "default" : "outline"}
+              variant={index === 0 ? "secondary" : "outline"}
               className="whitespace-nowrap"
               onClick={() => {/* Would filter by category */}}
             >

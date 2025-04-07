@@ -68,7 +68,7 @@ export default function Explore() {
           {categories.map((category, index) => (
             <Button 
               key={index}
-              variant={index === 0 ? "default" : "outline"}
+              variant={index === 0 ? "secondary" : "outline"}
               className="whitespace-nowrap"
             >
               {category}
