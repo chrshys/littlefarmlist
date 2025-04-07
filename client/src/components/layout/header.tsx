@@ -29,6 +29,11 @@ export function Header() {
               Popular
             </a>
           </Link>
+          <Link href="/my-listings">
+            <a className={`px-3 py-2 text-sm ${location === '/my-listings' ? 'bg-primary-50 text-primary-500 font-medium' : 'text-neutral-600 hover:bg-neutral-50'}`}>
+              My Listings
+            </a>
+          </Link>
         </div>
       </nav>
     </header>
