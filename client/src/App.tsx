@@ -10,6 +10,7 @@ import Confirmation from "@/pages/confirmation";
 import ListingView from "@/pages/listing-view";
 import MyListings from "@/pages/my-listings";
 import PopularListings from "@/pages/popular-listings";
+import MapView from "@/pages/map-view";
 
 function Router() {
   return (
@@ -21,6 +22,7 @@ function Router() {
         <Route path="/l/:id" component={ListingView} />
         <Route path="/my-listings" component={MyListings} />
         <Route path="/popular" component={PopularListings} />
+        <Route path="/map" component={MapView} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

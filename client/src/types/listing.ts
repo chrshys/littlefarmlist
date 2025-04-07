@@ -3,6 +3,11 @@ export interface Item {
   price: number;
 }
 
+export interface Coordinates {
+  lat: number;
+  lng: number;
+}
+
 export interface Listing {
   id: number;
   title: string;
@@ -10,6 +15,8 @@ export interface Listing {
   items: Item[];
   pickupInstructions: string;
   paymentInfo?: string;
+  address?: string;
+  coordinates?: Coordinates;
   createdAt: Date;
   editToken: string;
 }
@@ -20,4 +27,6 @@ export interface CreateListingForm {
   items: Item[];
   pickupInstructions: string;
   paymentInfo?: string;
+  address?: string;
+  coordinates?: Coordinates;
 }

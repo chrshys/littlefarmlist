@@ -35,7 +35,11 @@ export class MemStorage implements IStorage {
       ...listingData,
       id,
       editToken,
-      createdAt
+      createdAt,
+      description: listingData.description || null,
+      paymentInfo: listingData.paymentInfo || null,
+      address: listingData.address || null,
+      coordinates: listingData.coordinates || null
     };
     
     this.listings.set(id, listing);
@@ -63,9 +67,18 @@ export class MemStorage implements IStorage {
       return undefined;
     }
     
+    // Handle null/undefined conversions
+    const processedUpdate = {
+      ...listingUpdate,
+      description: listingUpdate.description ?? listing.description,
+      paymentInfo: listingUpdate.paymentInfo ?? listing.paymentInfo,
+      address: listingUpdate.address ?? listing.address,
+      coordinates: listingUpdate.coordinates ?? listing.coordinates
+    };
+    
     const updatedListing: Listing = {
       ...listing,
-      ...listingUpdate,
+      ...processedUpdate,
     };
     
     this.listings.set(id, updatedListing);

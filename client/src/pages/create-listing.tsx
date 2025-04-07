@@ -20,12 +20,19 @@ const itemSchema = z.object({
   price: z.number().min(0, "Price must be a positive number"),
 });
 
+const coordinatesSchema = z.object({
+  lat: z.number(),
+  lng: z.number()
+});
+
 const createListingSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
   description: z.string().optional(),
   items: z.array(itemSchema).min(1, "Add at least one item"),
   pickupInstructions: z.string().min(5, "Pickup instructions are required"),
   paymentInfo: z.string().optional(),
+  address: z.string().min(5, "Address is required"),
+  coordinates: coordinatesSchema.optional(),
 });
 
 export default function CreateListing() {
@@ -47,6 +54,7 @@ export default function CreateListing() {
       items: [{ name: "", price: 0 }],
       pickupInstructions: "",
       paymentInfo: "",
+      address: "",
     }
   });
 
@@ -220,6 +228,25 @@ export default function CreateListing() {
             className="resize-none"
             {...register("paymentInfo")}
           />
+        </div>
+        
+        {/* Location/Address */}
+        <div>
+          <Label htmlFor="address" className="text-sm font-medium text-neutral-700 mb-2 block">
+            Address
+          </Label>
+          <Input
+            id="address"
+            placeholder="e.g., 123 Farm Road, Rural County"
+            {...register("address")}
+            className={errors.address ? "border-red-300" : ""}
+          />
+          {errors.address && (
+            <p className="text-sm text-red-500 mt-1">{errors.address.message}</p>
+          )}
+          <p className="text-xs text-neutral-500 mt-1">
+            This address will be displayed on the map to help buyers find your items
+          </p>
         </div>
         
         {/* Submit Button */}

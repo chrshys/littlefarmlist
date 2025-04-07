@@ -25,6 +25,9 @@ export function Header() {
           <div className={`px-3 py-2 text-sm ${location === '/popular' ? 'bg-primary-50 text-primary-500 font-medium' : 'text-neutral-600 hover:bg-neutral-50'}`}>
             <Link href="/popular">Popular</Link>
           </div>
+          <div className={`px-3 py-2 text-sm ${location === '/map' ? 'bg-primary-50 text-primary-500 font-medium' : 'text-neutral-600 hover:bg-neutral-50'}`}>
+            <Link href="/map">Map</Link>
+          </div>
           <div className={`px-3 py-2 text-sm ${location === '/my-listings' ? 'bg-primary-50 text-primary-500 font-medium' : 'text-neutral-600 hover:bg-neutral-50'}`}>
             <Link href="/my-listings">My Listings</Link>
           </div>
