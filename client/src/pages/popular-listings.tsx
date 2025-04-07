@@ -1,0 +1,119 @@
+import React from "react";
+import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Header } from "@/components/layout/header";
+import { formatCurrency, formatDate } from "@/lib/listings";
+import { Listing } from "@/types/listing";
+
+export default function PopularListings() {
+  const [_, navigate] = useLocation();
+  
+  // Fetch all listings
+  const { data: listings = [], isLoading, error } = useQuery<Listing[]>({
+    queryKey: ['/api/listings'],
+  });
+  
+  // Sort listings by creation date (newest first)
+  const sortedListings = [...listings].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+  
+  return (
+    <div className="max-w-md mx-auto p-4 pb-16">
+      <Header />
+      
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl font-medium text-neutral-800">Popular listings</h2>
+      </div>
+      
+      {isLoading && (
+        <div className="space-y-4">
+          <Skeleton className="h-40 w-full" />
+          <Skeleton className="h-40 w-full" />
+          <Skeleton className="h-40 w-full" />
+        </div>
+      )}
+      
+      {error && (
+        <div className="text-center py-8">
+          <p className="text-red-500 mb-4">Error loading listings</p>
+          <Button onClick={() => window.location.reload()} variant="outline">
+            Try again
+          </Button>
+        </div>
+      )}
+      
+      {!isLoading && sortedListings.length === 0 && (
+        <div className="text-center py-8">
+          <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-neutral-100 text-neutral-400 mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-medium text-neutral-800 mb-2">No listings found</h3>
+          <p className="text-neutral-600 mb-4">
+            Be the first to create a listing to share with your community.
+          </p>
+          <Button
+            onClick={() => navigate("/create")}
+            className="bg-primary-500 hover:bg-primary-600"
+          >
+            Create a listing
+          </Button>
+        </div>
+      )}
+      
+      {!isLoading && sortedListings.length > 0 && (
+        <div className="space-y-4">
+          {sortedListings.map(listing => (
+            <Card key={listing.id} className="overflow-hidden">
+              <CardContent className="p-0">
+                <div className="p-4">
+                  <h3 className="font-medium text-lg text-neutral-800 mb-1">
+                    {listing.title}
+                  </h3>
+                  <p className="text-sm text-neutral-500 mb-3">
+                    {formatDate(listing.createdAt)}
+                  </p>
+                  
+                  {listing.description && (
+                    <p className="text-neutral-700 text-sm mb-3 line-clamp-2">
+                      {listing.description}
+                    </p>
+                  )}
+                  
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {listing.items.slice(0, 3).map((item, index) => (
+                      <Badge key={index} variant="outline" className="text-xs bg-neutral-50">
+                        {item.name} – {formatCurrency(item.price)}
+                      </Badge>
+                    ))}
+                    {listing.items.length > 3 && (
+                      <Badge variant="outline" className="text-xs bg-neutral-50">
+                        +{listing.items.length - 3} more
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="border-t border-neutral-100 px-4 py-3 bg-neutral-50 flex justify-end">
+                  <Button
+                    variant="link"
+                    className="text-primary-500 hover:text-primary-600 p-0 h-auto"
+                    onClick={() => navigate(`/l/${listing.id}`)}
+                  >
+                    View details
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

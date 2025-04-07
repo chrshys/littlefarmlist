@@ -25,6 +25,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all listings
+  router.get("/listings", async (req, res) => {
+    try {
+      const listings = await storage.getAllListings();
+      res.json(listings);
+    } catch (error) {
+      console.error("Error fetching all listings:", error);
+      res.status(500).json({ message: "Failed to fetch listings" });
+    }
+  });
+
   // Get a listing by ID
   router.get("/listings/:id", async (req, res) => {
     const id = parseInt(req.params.id, 10);

@@ -10,6 +10,7 @@ import {
 export interface IStorage {
   createListing(listing: CreateListing): Promise<Listing>;
   getListing(id: number): Promise<Listing | undefined>;
+  getAllListings(): Promise<Listing[]>;
   getListingByEditToken(editToken: string): Promise<Listing | undefined>;
   updateListing(id: number, listing: Partial<InsertListing>): Promise<Listing | undefined>;
   deleteListing(id: number): Promise<boolean>;
@@ -43,6 +44,10 @@ export class MemStorage implements IStorage {
 
   async getListing(id: number): Promise<Listing | undefined> {
     return this.listings.get(id);
+  }
+
+  async getAllListings(): Promise<Listing[]> {
+    return Array.from(this.listings.values());
   }
 
   async getListingByEditToken(editToken: string): Promise<Listing | undefined> {

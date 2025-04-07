@@ -38,6 +38,14 @@ export default function Home() {
               >
                 View my listings
               </Button>
+              
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => navigate("/popular")}
+              >
+                Browse popular listings
+              </Button>
             </div>
           </CardContent>
         </Card>
