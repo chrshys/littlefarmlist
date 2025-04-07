@@ -33,8 +33,8 @@ const UserLocationIcon = L.divIcon({
 
 L.Marker.prototype.options.icon = DefaultIcon;
 
-// Default coordinates for map center (will be updated based on available locations)
-const DEFAULT_CENTER: Coordinates = { lat: 40.7128, lng: -74.0060 };
+// Default coordinates for map center (Niagara region of Ontario)
+const DEFAULT_CENTER: Coordinates = { lat: 43.0582, lng: -79.2902 };
 const DEFAULT_ZOOM = 10;
 const LOCAL_ZOOM = 14; // Zoom level for local view (approximately 15-20km radius)
 

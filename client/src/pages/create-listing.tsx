@@ -12,7 +12,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { CreateListingForm, Item } from "@/types/listing";
-import { createListing } from "@/lib/listings";
+import { createListing, getRandomNiagaraAddress, niagaraAddresses } from "@/lib/listings";
 
 // Validation schema based on our shared schema
 const itemSchema = z.object({
@@ -39,6 +39,7 @@ export default function CreateListing() {
   const [_, navigate] = useLocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const [addressSuggestion, setAddressSuggestion] = useState("");
 
   // Form setup
   const {
@@ -63,10 +64,43 @@ export default function CreateListing() {
     control,
     name: "items",
   });
+  
+  // Function to suggest a random Niagara region address
+  const suggestNiagaraAddress = () => {
+    const { address, coordinates } = getRandomNiagaraAddress();
+    // Set the suggestion in state so we can match it when submitting
+    setAddressSuggestion(address);
+    
+    // Update the form with the address and coordinates
+    const addressField = document.getElementById('address') as HTMLInputElement;
+    if (addressField) {
+      addressField.value = address;
+      // Trigger an input event to ensure react-hook-form updates
+      const event = new Event('input', { bubbles: true });
+      addressField.dispatchEvent(event);
+    }
+  };
 
   const onSubmit = async (data: CreateListingForm) => {
     setIsSubmitting(true);
     try {
+      // Add coordinates if we have an address suggestion from Niagara region
+      if (addressSuggestion && data.address === addressSuggestion) {
+        // Find the matching address in our Niagara addresses array
+        const matchingAddress = niagaraAddresses.find(item => item.address === addressSuggestion);
+        if (matchingAddress) {
+          // Add the coordinates to the form data
+          data.coordinates = matchingAddress.coordinates;
+        }
+      } else if (data.address) {
+        // If user entered a different address but it contains "Niagara", try to find a close match
+        const lowerAddress = data.address.toLowerCase();
+        if (lowerAddress.includes('niagara')) {
+          // Use a default Niagara region coordinate as fallback
+          data.coordinates = { lat: 43.0582, lng: -79.2902 }; // Niagara region center
+        }
+      }
+      
       const listing = await createListing(data);
       navigate(`/confirmation/${listing.id}`);
     } catch (error) {
@@ -98,12 +132,22 @@ export default function CreateListing() {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Location/Address */}
         <div>
-          <Label htmlFor="address" className="text-sm font-medium text-neutral-700 mb-2 flex items-center">
-            Farm Address <MapPin className="h-4 w-4 ml-1 text-primary-500" />
-          </Label>
+          <div className="flex justify-between items-center mb-2">
+            <Label htmlFor="address" className="text-sm font-medium text-neutral-700 flex items-center">
+              Farm Address <MapPin className="h-4 w-4 ml-1 text-primary-500" />
+            </Label>
+            <Button
+              type="button"
+              variant="link"
+              className="text-sm text-primary-500 hover:text-primary-600 font-medium p-0 h-auto"
+              onClick={suggestNiagaraAddress}
+            >
+              Suggest Niagara address
+            </Button>
+          </div>
           <Input
             id="address"
-            placeholder="e.g., 123 Farm Road, Rural County"
+            placeholder="e.g., 123 Niagara Stone Road, Niagara-on-the-Lake, ON"
             {...register("address")}
             className={errors.address ? "border-red-300" : ""}
           />

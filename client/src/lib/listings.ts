@@ -1,4 +1,4 @@
-import { Listing, CreateListingForm } from "@/types/listing";
+import { Listing, CreateListingForm, Coordinates } from "@/types/listing";
 import { apiRequest } from "@/lib/queryClient";
 
 // LocalStorage keys
@@ -101,4 +101,46 @@ export function formatDate(date: Date | string): string {
     day: 'numeric',
     year: 'numeric',
   }).format(date);
+}
+
+// Niagara region sample addresses and coordinates
+export const niagaraAddresses = [
+  {
+    address: "1055 Line 2 Rd, Niagara-on-the-Lake, ON",
+    coordinates: { lat: 43.2418, lng: -79.1543 }
+  },
+  {
+    address: "2487 Four Mile Creek Rd, Niagara-on-the-Lake, ON",
+    coordinates: { lat: 43.1704, lng: -79.1525 }
+  },
+  {
+    address: "3502 Sann Rd, Niagara Falls, ON",
+    coordinates: { lat: 43.0895, lng: -79.0849 }
+  },
+  {
+    address: "567 Niagara Stone Road, Niagara-on-the-Lake, ON",
+    coordinates: { lat: 43.2509, lng: -79.0865 }
+  },
+  {
+    address: "1339 Niagara Stone Rd, Niagara-on-the-Lake, ON",
+    coordinates: { lat: 43.2287, lng: -79.1098 }
+  },
+  {
+    address: "469 Queenston Rd, Niagara-on-the-Lake, ON",
+    coordinates: { lat: 43.1853, lng: -79.0862 }
+  },
+  {
+    address: "15618 Niagara Pkwy, Niagara-on-the-Lake, ON",
+    coordinates: { lat: 43.1601, lng: -79.0535 }
+  },
+  {
+    address: "3620 Seventh St, Jordan Station, ON",
+    coordinates: { lat: 43.1505, lng: -79.3698 }
+  }
+];
+
+// Get a random Niagara region address suggestion
+export function getRandomNiagaraAddress(): { address: string, coordinates: Coordinates } {
+  const randomIndex = Math.floor(Math.random() * niagaraAddresses.length);
+  return niagaraAddresses[randomIndex];
 }
