@@ -13,7 +13,7 @@
   
   /* Make form placeholder text and descriptions lighter */
   :root {
-    --muted-foreground-opacity: 0.4;
+    --muted-foreground-opacity: 0.65;
   }
   
   /* Lighter placeholder text in all form components */
