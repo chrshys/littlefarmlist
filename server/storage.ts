@@ -43,6 +43,7 @@ export class MemStorage implements IStorage {
       paymentInfo: listingData.paymentInfo || null,
       address: listingData.address,
       coordinates: listingData.coordinates || null,
+      imageUrl: listingData.imageUrl || null,
       createdAt,
       editToken
     };
@@ -82,6 +83,7 @@ export class MemStorage implements IStorage {
       paymentInfo: listingUpdate.paymentInfo ?? listing.paymentInfo,
       address: listingUpdate.address ?? listing.address,
       coordinates: listingUpdate.coordinates ?? listing.coordinates,
+      imageUrl: listingUpdate.imageUrl ?? listing.imageUrl,
       createdAt: listing.createdAt,
       editToken: listing.editToken
     };

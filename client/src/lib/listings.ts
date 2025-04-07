@@ -144,3 +144,13 @@ export function getRandomNiagaraAddress(): { address: string, coordinates: Coord
   const randomIndex = Math.floor(Math.random() * niagaraAddresses.length);
   return niagaraAddresses[randomIndex];
 }
+
+// Convert an image file to base64 string
+export function imageToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = error => reject(error);
+  });
+}

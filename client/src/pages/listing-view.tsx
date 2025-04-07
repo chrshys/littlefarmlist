@@ -34,7 +34,8 @@ export default function ListingView() {
     description: "",
     items: [{ name: "", price: 0 }],
     pickupInstructions: "",
-    paymentInfo: ""
+    paymentInfo: "",
+    imageUrl: ""
   });
   
   // Fetch the listing data
@@ -45,6 +46,7 @@ export default function ListingView() {
     items: [],
     pickupInstructions: "",
     paymentInfo: "",
+    imageUrl: "",
     createdAt: new Date(),
     editToken: ""
   } as Listing, isLoading, error } = useQuery<Listing>({
@@ -82,7 +84,8 @@ export default function ListingView() {
         description: listing.description || "",
         items: listing.items,
         pickupInstructions: listing.pickupInstructions,
-        paymentInfo: listing.paymentInfo || ""
+        paymentInfo: listing.paymentInfo || "",
+        imageUrl: listing.imageUrl || ""
       });
     }
   }, [listing]);
@@ -133,7 +136,8 @@ export default function ListingView() {
         description: listing.description || "",
         items: listing.items,
         pickupInstructions: listing.pickupInstructions,
-        paymentInfo: listing.paymentInfo || ""
+        paymentInfo: listing.paymentInfo || "",
+        imageUrl: listing.imageUrl || ""
       });
     }
     setIsEditMode(false);
@@ -190,6 +194,17 @@ export default function ListingView() {
       
       <Card className="mb-6 shadow-sm">
         <CardContent className="p-4 sm:p-6">
+          {/* Listing Image (if available) */}
+          {listing.imageUrl && (
+            <div className="mb-6 -mx-4 sm:-mx-6 sm:-mt-6">
+              <img 
+                src={listing.imageUrl} 
+                alt={listing.title} 
+                className="w-full h-48 sm:h-64 object-cover"
+              />
+            </div>
+          )}
+          
           {/* Listing Header */}
           <div className="mb-6">
             {isEditMode ? (

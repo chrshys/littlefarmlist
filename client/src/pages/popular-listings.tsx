@@ -75,6 +75,15 @@ export default function PopularListings() {
           {sortedListings.map(listing => (
             <Card key={listing.id} className="overflow-hidden shadow-sm hover:shadow transition-shadow">
               <CardContent className="p-0">
+                {listing.imageUrl && (
+                  <div className="w-full h-40 overflow-hidden">
+                    <img 
+                      src={listing.imageUrl} 
+                      alt={listing.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
                 <div className="p-4 sm:p-5">
                   <div className="flex justify-between items-start mb-1 gap-2">
                     <h3 className="font-medium text-lg text-neutral-800 line-clamp-1">

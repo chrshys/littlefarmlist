@@ -28,6 +28,7 @@ export const listings = pgTable("listings", {
   paymentInfo: text("payment_info"),
   address: text("address").notNull(),
   coordinates: jsonb("coordinates").$type<Coordinates>(),
+  imageUrl: text("image_url"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   editToken: text("edit_token").notNull(),
 });

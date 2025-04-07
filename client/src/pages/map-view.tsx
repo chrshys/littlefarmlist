@@ -199,6 +199,15 @@ export default function MapView() {
                 >
                   <Popup>
                     <div className="max-w-xs">
+                      {listing.imageUrl && (
+                        <div className="w-full h-32 overflow-hidden mb-2 -mt-1 -mx-1">
+                          <img 
+                            src={listing.imageUrl} 
+                            alt={listing.title}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      )}
                       <h3 className="font-medium text-neutral-800 mb-1">
                         {listing.title}
                       </h3>

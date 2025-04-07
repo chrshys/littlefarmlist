@@ -17,6 +17,7 @@ export interface Listing {
   paymentInfo?: string;
   address?: string;
   coordinates?: Coordinates;
+  imageUrl?: string;
   createdAt: Date;
   editToken: string;
 }
@@ -29,4 +30,5 @@ export interface CreateListingForm {
   paymentInfo?: string;
   address?: string;
   coordinates?: Coordinates;
+  imageUrl?: string;
 }
