@@ -11,6 +11,7 @@ import ListingView from "@/pages/listing-view";
 import MyListings from "@/pages/my-listings";
 import PopularListings from "@/pages/popular-listings";
 import MapView from "@/pages/map-view";
+import Explore from "@/pages/explore";
 
 function Router() {
   return (
@@ -23,6 +24,9 @@ function Router() {
         <Route path="/my-listings" component={MyListings} />
         <Route path="/popular" component={PopularListings} />
         <Route path="/map" component={MapView} />
+        <Route path="/explore" component={Explore} />
+        <Route path="/login" component={NotFound} />
+        <Route path="/signup" component={NotFound} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

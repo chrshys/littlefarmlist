@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,111 +10,82 @@ import { Search, Filter, Sprout } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/listings";
 import { Listing } from "@/types/listing";
 
-export default function Home() {
+export default function Explore() {
   const [_, navigate] = useLocation();
+  const [searchTerm, setSearchTerm] = useState("");
   
   // Fetch all listings
   const { data: listings = [], isLoading } = useQuery<Listing[]>({
     queryKey: ["/api/listings"],
   });
   
-  // Popular categories - these would be dynamically generated based on listing data
-  const categories = [
-    "Discover", "Popular", "Fruits", "Vegetables", "Eggs", "Dairy", "Baked Goods", "Crafts"
-  ];
+  // Filter listings based on search term
+  const filteredListings = searchTerm 
+    ? listings.filter(listing => 
+        listing.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        listing.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        listing.items.some(item => item.name.toLowerCase().includes(searchTerm.toLowerCase()))
+      )
+    : listings;
   
-  // Trending searches - these would be dynamically generated based on user behavior
-  const trendingSearches = [
-    "farm fresh eggs", "organic produce", "local honey", "homemade bread", "fresh milk", "handmade soap"
+  // Categories for filtering
+  const categories = [
+    "All", "Fruits", "Vegetables", "Eggs", "Dairy", "Baked Goods", "Crafts"
   ];
   
   return (
     <main className="mt-8 pb-12">
-      {/* Hero Section */}
-      <section className="mb-12 text-center">
-        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-neutral-900 mb-4">
-          Discover local products<br /> from your neighbors
-        </h1>
-        <p className="text-lg text-neutral-600 max-w-2xl mx-auto mb-8">
-          Find and purchase locally grown produce and handmade goods 
-          directly from producers in your community
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-4">Explore Listings</h1>
+        <p className="text-neutral-600">
+          Browse all listings or search for specific items
         </p>
-        
-        {/* Search Bar */}
-        <div className="max-w-lg mx-auto relative">
-          <div className="relative">
+      </div>
+      
+      {/* Search and Filter */}
+      <div className="mb-8">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 h-5 w-5" />
             <Input 
-              placeholder="What are you looking for?" 
-              className="pl-10 py-6 text-base rounded-full pr-24"
+              placeholder="Search listings..." 
+              className="pl-10"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <div className="absolute right-1.5 top-1/2 transform -translate-y-1/2">
-              <Button 
-                className="rounded-full h-9" 
-                size="sm"
-              >
-                Search
-              </Button>
-            </div>
           </div>
-          
-          {/* Trending Searches */}
-          <div className="mt-4 flex flex-wrap justify-center gap-2">
-            <span className="text-sm text-neutral-500 mr-1">Trending searches:</span>
-            {trendingSearches.map((term, index) => (
-              <button 
-                key={index}
-                className="text-sm text-neutral-600 hover:text-primary hover:underline transition-colors"
-                onClick={() => {/* Would handle search */}}
-              >
-                {term}
-              </button>
-            ))}
-          </div>
+          <Button variant="outline" className="sm:w-auto">
+            <Filter className="h-4 w-4 mr-2" />
+            Filter
+          </Button>
         </div>
-      </section>
+      </div>
       
       {/* Categories */}
-      <section className="mb-10">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold">Browse by category</h2>
-        </div>
-        
+      <div className="mb-8">
+        <h2 className="text-lg font-medium mb-3">Categories</h2>
         <div className="flex overflow-x-auto gap-2 pb-2 hide-scrollbar">
           {categories.map((category, index) => (
             <Button 
               key={index}
               variant={index === 0 ? "default" : "outline"}
               className="whitespace-nowrap"
-              onClick={() => {/* Would filter by category */}}
             >
               {category}
             </Button>
           ))}
-          
-          <Button 
-            variant="outline"
-            className="whitespace-nowrap ml-1"
-            onClick={() => {/* Would open filter modal */}}
-          >
-            <Filter className="h-4 w-4 mr-2" />
-            Filters
-          </Button>
         </div>
-      </section>
+      </div>
       
-      {/* Listings Grid */}
-      <section>
+      {/* Listing Results */}
+      <div>
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold">Recent listings</h2>
-          <Button 
-            variant="ghost" 
-            size="sm"
-            onClick={() => navigate("/popular")}
-          >
-            View all
-            <span className="ml-1 text-lg leading-none">→</span>
-          </Button>
+          <h2 className="text-lg font-medium">
+            {searchTerm ? `Search results for "${searchTerm}"` : "All listings"}
+          </h2>
+          <div className="text-sm text-neutral-500">
+            {filteredListings.length} {filteredListings.length === 1 ? 'listing' : 'listings'} found
+          </div>
         </div>
         
         {isLoading && (
@@ -136,24 +107,28 @@ export default function Home() {
           </div>
         )}
         
-        {!isLoading && listings.length === 0 && (
+        {!isLoading && filteredListings.length === 0 && (
           <div className="text-center py-16 bg-neutral-50 rounded-lg border border-neutral-200">
             <div className="bg-neutral-100 h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Sprout className="h-8 w-8 text-neutral-400" />
+              <Search className="h-8 w-8 text-neutral-400" />
             </div>
-            <h3 className="text-lg font-medium text-neutral-800 mb-2">No listings yet</h3>
+            <h3 className="text-lg font-medium text-neutral-800 mb-2">No listings found</h3>
             <p className="text-neutral-600 mb-6 max-w-md mx-auto">
-              Be the first to create a listing and share it with your community
+              {searchTerm 
+                ? "Try a different search term or browse all listings" 
+                : "No listings are available at the moment"}
             </p>
-            <Button onClick={() => navigate("/create")}>
-              Create a listing
-            </Button>
+            {searchTerm && (
+              <Button variant="outline" onClick={() => setSearchTerm("")}>
+                Clear search
+              </Button>
+            )}
           </div>
         )}
         
-        {!isLoading && listings.length > 0 && (
+        {!isLoading && filteredListings.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {listings.map(listing => (
+            {filteredListings.map(listing => (
               <Card key={listing.id} className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer" 
                 onClick={() => navigate(`/l/${listing.id}`)}>
                 {listing.imageUrl ? (
@@ -208,7 +183,7 @@ export default function Home() {
             ))}
           </div>
         )}
-      </section>
+      </div>
     </main>
   );
 }
