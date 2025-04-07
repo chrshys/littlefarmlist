@@ -129,7 +129,7 @@ export default function MyListings() {
           </div>
           <h3 className="text-lg font-medium text-neutral-800 mb-2">No listings found</h3>
           <p className="text-neutral-600 mb-4">
-            You haven"t created any listings yet or they might be on another device.
+            You haven't created any listings yet or they might be on another device.
           </p>
           <Button
             onClick={() => navigate("/create")}
@@ -151,7 +151,7 @@ export default function MyListings() {
                       {listing.title}
                     </h3>
                     <Badge variant="secondary" className="text-xs flex-shrink-0">
-                      {listing.items.length} {listing.items.length === 1 ? "item" : "items"}
+                      {listing.items.length} {listing.items.length === 1 ? 'item' : 'items'}
                     </Badge>
                   </div>
                   <p className="text-sm text-neutral-500 mb-3">

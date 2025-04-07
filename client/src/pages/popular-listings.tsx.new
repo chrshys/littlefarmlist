@@ -13,7 +13,7 @@ export default function PopularListings() {
   
   // Fetch all listings
   const { data: listings = [], isLoading, error } = useQuery<Listing[]>({
-    queryKey: ["/api/listings"],
+    queryKey: ['/api/listings'],
   });
   
   // Sort listings by popularity (number of items, then by creation date)
@@ -81,7 +81,7 @@ export default function PopularListings() {
                       {listing.title}
                     </h3>
                     <Badge variant="secondary" className="text-xs flex-shrink-0">
-                      {listing.items.length} {listing.items.length === 1 ? "item" : "items"}
+                      {listing.items.length} {listing.items.length === 1 ? 'item' : 'items'}
                     </Badge>
                   </div>
                   <p className="text-sm text-neutral-500 mb-3">
