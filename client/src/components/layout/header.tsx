@@ -13,7 +13,7 @@ export function Header() {
         <Link href="/">
           <div className="flex items-center cursor-pointer">
             <Sprout className="h-6 w-6 text-primary mr-2" />
-            <h1 className="text-xl font-medium text-neutral-800">Small Things</h1>
+            <h1 className="text-xl font-medium text-neutral-800">Little Farm List</h1>
           </div>
         </Link>
 
