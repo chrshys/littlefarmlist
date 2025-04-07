@@ -69,10 +69,23 @@ const LocationFinder = () => {
         if (userMarker) {
           userMarker.setLatLng([userLoc.lat, userLoc.lng]);
         } else {
+          // Create a custom popup with styled content
+          const popupContent = document.createElement('div');
+          popupContent.innerHTML = `
+            <div class="flex items-center py-2 px-3">
+              <span class="font-medium text-neutral-800">You are here</span>
+            </div>
+          `;
+          
           const marker = L.marker([userLoc.lat, userLoc.lng], { icon: UserLocationIcon })
             .addTo(map)
-            .bindPopup("You are here")
+            .bindPopup(popupContent, { 
+              closeButton: true,
+              className: 'custom-popup',
+              offset: L.point(0, -8) 
+            })
             .openPopup();
+          
           setUserMarker(marker);
         }
       },
