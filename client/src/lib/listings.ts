@@ -47,8 +47,11 @@ export function deleteListingToken(listingId: number): void {
 
 // Create a new listing
 export async function createListing(listing: CreateListingForm): Promise<Listing> {
-  const response = await apiRequest("POST", "/api/listings", listing);
-  const newListing = await response.json();
+  const newListing = await apiRequest({
+    method: "POST", 
+    url: "/api/listings", 
+    body: listing
+  });
   
   // Save edit token to localStorage
   saveListingToken(newListing.id, newListing.editToken);
@@ -62,20 +65,19 @@ export async function updateListing(
   editToken: string, 
   updates: Partial<CreateListingForm>
 ): Promise<Listing> {
-  const response = await apiRequest(
-    "PATCH", 
-    `/api/listings/${listingId}?editToken=${editToken}`, 
-    updates
-  );
-  return await response.json();
+  return await apiRequest({
+    method: "PATCH", 
+    url: `/api/listings/${listingId}?editToken=${editToken}`, 
+    body: updates
+  });
 }
 
 // Delete a listing
 export async function deleteListing(listingId: number, editToken: string): Promise<boolean> {
-  await apiRequest(
-    "DELETE", 
-    `/api/listings/${listingId}?editToken=${editToken}`
-  );
+  await apiRequest({
+    method: "DELETE", 
+    url: `/api/listings/${listingId}?editToken=${editToken}`
+  });
   
   // Remove from localStorage
   deleteListingToken(listingId);
