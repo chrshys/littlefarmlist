@@ -6,13 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Trash2, MapPin, Image, X } from "lucide-react";
+import { ArrowLeft, Trash2, MapPin, Image, X, Tag } from "lucide-react";
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { CreateListingForm, Item } from "@/types/listing";
 import { createListing, getRandomNiagaraAddress, niagaraAddresses, imageToBase64 } from "@/lib/listings";
+import { Badge } from "@/components/ui/badge";
 
 // Validation schema based on our shared schema
 const itemSchema = z.object({
@@ -30,6 +31,7 @@ const createListingSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
   description: z.string().optional(),
   items: z.array(itemSchema).min(1, "Add at least one item"),
+  categories: z.array(z.string()).optional(),
   pickupInstructions: z.string().min(5, "Pickup instructions are required"),
   paymentInfo: z.string().optional(),
   coordinates: coordinatesSchema.optional(),
@@ -43,6 +45,22 @@ export default function CreateListing() {
   const [addressSuggestion, setAddressSuggestion] = useState("");
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  
+  // Available categories
+  const categories = [
+    "Vegetables", 
+    "Fruits", 
+    "Dairy", 
+    "Eggs", 
+    "Meat", 
+    "Honey", 
+    "Baked Goods", 
+    "Preserves", 
+    "Plants",
+    "Herbs",
+    "Flowers"
+  ];
 
   // Form setup
   const {
@@ -127,6 +145,26 @@ export default function CreateListing() {
       imageUrlField.dispatchEvent(event);
     }
   };
+  
+  // Handle category selection
+  const handleCategoryToggle = (category: string) => {
+    setSelectedCategories(prev => {
+      const newCategories = prev.includes(category)
+        ? prev.filter(c => c !== category) // Remove if already selected
+        : [...prev, category]; // Add if not selected
+        
+      // Update hidden input for form submission
+      const categoriesField = document.getElementById('categories') as HTMLInputElement;
+      if (categoriesField) {
+        categoriesField.value = JSON.stringify(newCategories);
+        // Trigger an input event to ensure react-hook-form updates
+        const event = new Event('input', { bubbles: true });
+        categoriesField.dispatchEvent(event);
+      }
+      
+      return newCategories;
+    });
+  };
 
   const onSubmit = async (data: CreateListingForm) => {
     setIsSubmitting(true);
@@ -146,6 +184,11 @@ export default function CreateListing() {
           // Use a default Niagara region coordinate as fallback
           data.coordinates = { lat: 43.0582, lng: -79.2902 }; // Niagara region center
         }
+      }
+      
+      // Add the selected categories
+      if (selectedCategories.length > 0) {
+        data.categories = selectedCategories;
       }
       
       const listing = await createListing(data);

@@ -24,6 +24,7 @@ export const listings = pgTable("listings", {
   title: text("title").notNull(),
   description: text("description"),
   items: jsonb("items").$type<Item[]>().notNull(),
+  categories: jsonb("categories").$type<string[]>().default([]),
   pickupInstructions: text("pickup_instructions").notNull(),
   paymentInfo: text("payment_info"),
   address: text("address").notNull(),

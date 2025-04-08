@@ -13,6 +13,7 @@ export interface Listing {
   title: string;
   description?: string;
   items: Item[];
+  categories?: string[];
   pickupInstructions: string;
   paymentInfo?: string;
   address?: string;
@@ -26,6 +27,7 @@ export interface CreateListingForm {
   title: string;
   description?: string;
   items: Item[];
+  categories?: string[];
   pickupInstructions: string;
   paymentInfo?: string;
   address?: string;
