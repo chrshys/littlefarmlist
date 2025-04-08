@@ -15,11 +15,12 @@ const signupSchema = z.object({
   username: z.string().min(3, { message: "Username must be at least 3 characters" }),
   email: z.string().email({ message: "Please enter a valid email address" }),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }),
+  confirmPassword: z.string().min(6, { message: "Password must be at least 6 characters" }),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
-}).refine((data) => {
-  // Optional refinements if needed
-  return true;
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
 });
 
 type SignupFormValues = z.infer<typeof signupSchema>;
@@ -36,6 +37,7 @@ export default function Signup() {
       username: "",
       email: "",
       password: "",
+      confirmPassword: "",
       firstName: "",
       lastName: "",
     },
@@ -149,6 +151,19 @@ export default function Signup() {
                     <FormDescription>
                       Must be at least 6 characters
                     </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Confirm Password</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Confirm your password" type="password" {...field} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
