@@ -104,16 +104,16 @@ export default function Dashboard() {
       navigator.share({
         title: listing.title,
         text: `Check out this listing: ${listing.title}`,
-        url: `/listing/${listing.id}`
+        url: `/l/${listing.id}`
       })
       .catch((error) => {
         console.error('Error sharing:', error);
         // Fallback to copying the URL
-        copyToClipboard(`${window.location.origin}/listing/${listing.id}`);
+        copyToClipboard(`${window.location.origin}/l/${listing.id}`);
       });
     } else {
       // Fallback for browsers that don't support the Web Share API
-      copyToClipboard(`${window.location.origin}/listing/${listing.id}`);
+      copyToClipboard(`${window.location.origin}/l/${listing.id}`);
     }
   };
   
@@ -204,7 +204,7 @@ export default function Dashboard() {
             <h1 className="text-2xl font-bold">Hello, {user?.firstName || user?.username}</h1>
             <p className="text-muted-foreground">Welcome to your dashboard</p>
           </div>
-          <Link href="/create-listing">
+          <Link href="/create">
             <Button className="mt-4 md:mt-0">Create New Listing</Button>
           </Link>
         </div>
@@ -237,14 +237,14 @@ export default function Dashboard() {
                       <div className="flex-1 p-6">
                         <CardHeader className="p-0 pb-2">
                           <div className="flex justify-between items-start">
-                            <Link href={`/listing/${listing.id}`}>
+                            <Link href={`/l/${listing.id}`}>
                               <CardTitle className="hover:underline cursor-pointer">{listing.title}</CardTitle>
                             </Link>
                             <div className="flex space-x-1">
                               <Button variant="ghost" size="icon" onClick={() => handleShare(listing)}>
                                 <Share2 className="h-4 w-4" />
                               </Button>
-                              <Link href={`/create-listing?edit=${listing.id}&token=${getMyListings()[listing.id]}`}>
+                              <Link href={`/create?edit=${listing.id}&token=${getMyListings()[listing.id]}`}>
                                 <Button variant="ghost" size="icon">
                                   <Edit className="h-4 w-4" />
                                 </Button>
@@ -301,7 +301,7 @@ export default function Dashboard() {
                     </CardDescription>
                   </CardHeader>
                   <CardFooter>
-                    <Link href="/create-listing">
+                    <Link href="/create">
                       <Button>Create Listing</Button>
                     </Link>
                   </CardFooter>
@@ -332,7 +332,7 @@ export default function Dashboard() {
                       <div className="flex-1 p-6">
                         <CardHeader className="p-0 pb-2">
                           <div className="flex justify-between items-start">
-                            <Link href={`/listing/${listing.id}`}>
+                            <Link href={`/l/${listing.id}`}>
                               <CardTitle className="hover:underline cursor-pointer">{listing.title}</CardTitle>
                             </Link>
                             <div className="flex space-x-1">
