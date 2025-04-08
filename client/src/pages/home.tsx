@@ -15,16 +15,34 @@ export default function Home() {
   const [_, navigate] = useLocation();
   const [selectedCategory, setSelectedCategory] = useState<string>("Discover");
   
-  // Fetch all listings
-  const { data: listings = [], isLoading } = useQuery<Listing[]>({
-    queryKey: ["/api/listings"],
+  // Get category ID from selected category name
+  const getCategoryId = (categoryName: string): number | null => {
+    const category = categoriesData.find(cat => cat.name === categoryName);
+    return category ? category.id : null;
+  };
+  
+  // Fetch categories from API
+  const { data: categoriesData = [], isLoading: categoriesLoading } = useQuery<{ id: number, name: string, description: string }[]>({
+    queryKey: ["/api/categories"],
   });
   
-  // Popular categories - these would be dynamically generated based on listing data
-  const categories = [
-    "Discover", "Popular", "Fruits", "Vegetables", "Eggs", "Dairy", "Baked Goods", "Crafts",
-    "Meat", "Preserves", "Beer", "Wine", "Flowers", "Pantry", "Prepared Meals"
-  ];
+  // Process categories for display
+  // Add our special 'Discover' and 'Popular' options at the beginning
+  const categories = ["Discover", "Popular", ...categoriesData.map(cat => cat.name)];
+  
+  // Fetch all listings or category-specific listings
+  const { data: listings = [], isLoading: listingsLoading } = useQuery<Listing[]>({
+    queryKey: [
+      selectedCategory === "Discover" || selectedCategory === "Popular" 
+        ? "/api/listings" 
+        : `/api/categories/${getCategoryId(selectedCategory)}/listings`
+    ],
+    // Only fetch category-specific listings if a specific category is selected (not Discover or Popular)
+    enabled: selectedCategory === "Discover" || selectedCategory === "Popular" || !!getCategoryId(selectedCategory),
+  });
+  
+  // Loading state for components
+  const isLoading = listingsLoading || categoriesLoading;
   
   // Trending searches - these would be dynamically generated based on user behavior
   const trendingSearches = [
@@ -97,7 +115,11 @@ export default function Home() {
       {/* Listings Grid */}
       <section>
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold">Recent listings</h2>
+          <h2 className="text-xl font-semibold">
+            {selectedCategory === "Discover" && "Recent listings"}
+            {selectedCategory === "Popular" && "Popular listings"}
+            {selectedCategory !== "Discover" && selectedCategory !== "Popular" && `${selectedCategory} listings`}
+          </h2>
           <Button 
             variant="ghost" 
             size="sm"
@@ -132,9 +154,15 @@ export default function Home() {
             <div className="bg-neutral-100 h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-4">
               <Sprout className="h-8 w-8 text-neutral-400" />
             </div>
-            <h3 className="text-lg font-medium text-neutral-800 mb-2">No listings yet</h3>
+            <h3 className="text-lg font-medium text-neutral-800 mb-2">
+              {(selectedCategory === "Discover" || selectedCategory === "Popular") 
+                ? "No listings yet" 
+                : `No ${selectedCategory} listings yet`}
+            </h3>
             <p className="text-neutral-600 mb-6 max-w-md mx-auto">
-              Be the first to create a listing and share it with your community
+              {(selectedCategory === "Discover" || selectedCategory === "Popular")
+                ? "Be the first to create a listing and share it with your community"
+                : `Be the first to create a listing in the ${selectedCategory} category`}
             </p>
             <Button onClick={() => navigate("/create")}>
               Create a listing
