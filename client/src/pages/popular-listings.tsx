@@ -27,10 +27,13 @@ export default function PopularListings() {
   });
   
   return (
-    <main>
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-medium text-neutral-800">Popular listings</h2>
-        <div className="text-xs text-neutral-500">Sorted by item count</div>
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold">Popular Listings</h1>
+          <p className="text-muted-foreground">Listings sorted by popularity</p>
+        </div>
+        <div className="text-xs text-neutral-500 mt-2 md:mt-0">Sorted by item count</div>
       </div>
       
       {isLoading && (
@@ -151,6 +154,6 @@ export default function PopularListings() {
           ))}
         </div>
       )}
-    </main>
+    </div>
   );
 }

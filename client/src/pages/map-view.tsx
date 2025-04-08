@@ -186,8 +186,13 @@ export default function MapView() {
   };
 
   return (
-    <div className="w-full px-2 sm:px-3">
-      <h2 className="text-xl font-medium text-neutral-800 mb-4">Map View</h2>
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold">Map View</h1>
+          <p className="text-muted-foreground">Browse listings by location</p>
+        </div>
+      </div>
       
       <div className="overflow-hidden rounded-lg border border-neutral-200 relative">
         {/* Map container with available listings */}

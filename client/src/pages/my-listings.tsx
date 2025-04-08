@@ -98,17 +98,19 @@ export default function MyListings() {
   };
 
   return (
-    <main>
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-medium text-neutral-800">My listings</h2>
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold">My Listings</h1>
+          <p className="text-muted-foreground">Manage your created listings</p>
+        </div>
         <Button
-          variant="outline"
-          size="sm"
+          variant="default"
           onClick={() => navigate("/create")}
-          className="flex items-center gap-1 text-xs"
+          className="flex items-center gap-1 mt-4 md:mt-0"
         >
-          <Plus className="h-3 w-3" />
-          New listing
+          <Plus className="h-4 w-4 mr-1" />
+          Create New Listing
         </Button>
       </div>
       
@@ -262,6 +264,6 @@ export default function MyListings() {
           ))}
         </div>
       )}
-    </main>
+    </div>
   );
 }
