@@ -70,20 +70,14 @@ export async function updateListing(
   updates: Partial<CreateListingForm>,
   editToken?: string
 ): Promise<Listing> {
-  const headers: Record<string, string> = {};
-  
-  // Add Authorization header if editToken is provided
-  if (editToken) {
-    headers["Authorization"] = `Bearer ${editToken}`;
-  }
+  // Note: We only need the editToken for non-authenticated routes
+  // When logged in, we don't need it because the server will check if
+  // we own the listing instead using the authentication session
   
   const updatedListing = await apiRequest({
     method: "PATCH", 
     url: `/api/listings/${listingId}`, 
-    body: {
-      ...updates,
-      editToken
-    }
+    body: updates
   });
   
   // Invalidate queries

@@ -235,8 +235,9 @@ export default function CreateListing() {
       let listing: Listing;
       
       if (isEditMode && editId) {
-        // Update existing listing with editToken
-        listing = await updateListing(editId, data, editToken || undefined);
+        // When updating while logged in, we don't need to pass the editToken
+        // The server will check if we own the listing instead
+        listing = await updateListing(editId, data);
         console.log("Listing updated successfully:", listing);
         
         // Redirect to My Listings page after update
