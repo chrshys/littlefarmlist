@@ -1,23 +1,44 @@
 import { nanoid } from "nanoid";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, and, inArray } from "drizzle-orm";
 import {
   listings,
+  categories,
+  listingCategories,
   type Listing,
   type InsertListing,
   type CreateListing, 
   type Item,
-  type Coordinates
+  type Coordinates,
+  type Category,
+  type InsertCategory,
+  type CreateCategory,
+  type ListingCategory
 } from "@shared/schema";
 import { db } from "./db";
 
 // Storage interface
 export interface IStorage {
+  // Listing methods
   createListing(listing: CreateListing): Promise<Listing>;
   getListing(id: number): Promise<Listing | undefined>;
   getAllListings(): Promise<Listing[]>;
   getListingByEditToken(editToken: string): Promise<Listing | undefined>;
   updateListing(id: number, listing: Partial<InsertListing>): Promise<Listing | undefined>;
   deleteListing(id: number): Promise<boolean>;
+  
+  // Category methods
+  createCategory(category: CreateCategory): Promise<Category>;
+  getCategory(id: number): Promise<Category | undefined>;
+  getCategoryByName(name: string): Promise<Category | undefined>;
+  getAllCategories(): Promise<Category[]>;
+  updateCategory(id: number, category: Partial<InsertCategory>): Promise<Category | undefined>;
+  deleteCategory(id: number): Promise<boolean>;
+  
+  // Listing-Category relationship methods
+  addCategoryToListing(listingId: number, categoryId: number): Promise<void>;
+  removeCategoryFromListing(listingId: number, categoryId: number): Promise<void>;
+  getListingCategories(listingId: number): Promise<Category[]>;
+  getCategoryListings(categoryId: number): Promise<Listing[]>;
 }
 
 // PostgreSQL database storage implementation
@@ -277,20 +298,216 @@ export class DbStorage implements IStorage {
     
     return result.rows.length > 0;
   }
+  
+  // Category methods
+  async createCategory(categoryData: CreateCategory): Promise<Category> {
+    const result = await db.execute(sql`
+      INSERT INTO categories (
+        name,
+        description
+      ) VALUES (
+        ${categoryData.name},
+        ${categoryData.description || null}
+      )
+      RETURNING *
+    `);
+    
+    const row = result.rows[0];
+    return {
+      id: row.id,
+      name: row.name,
+      description: row.description,
+      createdAt: row.created_at
+    } as Category;
+  }
+  
+  async getCategory(id: number): Promise<Category | undefined> {
+    const result = await db.execute(sql`
+      SELECT * FROM categories WHERE id = ${id}
+    `);
+    
+    if (result.rows.length === 0) {
+      return undefined;
+    }
+    
+    const row = result.rows[0];
+    return {
+      id: row.id,
+      name: row.name,
+      description: row.description,
+      createdAt: row.created_at
+    } as Category;
+  }
+  
+  async getCategoryByName(name: string): Promise<Category | undefined> {
+    const result = await db.execute(sql`
+      SELECT * FROM categories WHERE name = ${name}
+    `);
+    
+    if (result.rows.length === 0) {
+      return undefined;
+    }
+    
+    const row = result.rows[0];
+    return {
+      id: row.id,
+      name: row.name,
+      description: row.description,
+      createdAt: row.created_at
+    } as Category;
+  }
+  
+  async getAllCategories(): Promise<Category[]> {
+    const result = await db.execute(sql`
+      SELECT * FROM categories ORDER BY name ASC
+    `);
+    
+    return result.rows.map(row => ({
+      id: row.id,
+      name: row.name,
+      description: row.description,
+      createdAt: row.created_at
+    })) as Category[];
+  }
+  
+  async updateCategory(id: number, categoryUpdate: Partial<InsertCategory>): Promise<Category | undefined> {
+    const existingCategory = await this.getCategory(id);
+    
+    if (!existingCategory) {
+      return undefined;
+    }
+    
+    if (Object.keys(categoryUpdate).length === 0) {
+      return existingCategory;
+    }
+    
+    if (categoryUpdate.name !== undefined) {
+      await db.execute(sql`
+        UPDATE categories
+        SET name = ${categoryUpdate.name}
+        WHERE id = ${id}
+      `);
+    }
+    
+    if (categoryUpdate.description !== undefined) {
+      await db.execute(sql`
+        UPDATE categories
+        SET description = ${categoryUpdate.description}
+        WHERE id = ${id}
+      `);
+    }
+    
+    // Get the updated category
+    const result = await db.execute(sql`
+      SELECT * FROM categories WHERE id = ${id}
+    `);
+    
+    if (result.rows.length === 0) {
+      return undefined;
+    }
+    
+    const row = result.rows[0];
+    return {
+      id: row.id,
+      name: row.name,
+      description: row.description,
+      createdAt: row.created_at
+    } as Category;
+  }
+  
+  async deleteCategory(id: number): Promise<boolean> {
+    const result = await db.execute(sql`
+      DELETE FROM categories
+      WHERE id = ${id}
+      RETURNING id
+    `);
+    
+    return result.rows.length > 0;
+  }
+  
+  // Listing-Category relationship methods
+  async addCategoryToListing(listingId: number, categoryId: number): Promise<void> {
+    // First check if the relationship already exists
+    const existingResult = await db.execute(sql`
+      SELECT * FROM listing_categories
+      WHERE listing_id = ${listingId} AND category_id = ${categoryId}
+    `);
+    
+    if (existingResult.rows.length === 0) {
+      // Relationship doesn't exist, so create it
+      await db.execute(sql`
+        INSERT INTO listing_categories (listing_id, category_id)
+        VALUES (${listingId}, ${categoryId})
+      `);
+    }
+  }
+  
+  async removeCategoryFromListing(listingId: number, categoryId: number): Promise<void> {
+    await db.execute(sql`
+      DELETE FROM listing_categories
+      WHERE listing_id = ${listingId} AND category_id = ${categoryId}
+    `);
+  }
+  
+  async getListingCategories(listingId: number): Promise<Category[]> {
+    const result = await db.execute(sql`
+      SELECT c.* FROM categories c
+      JOIN listing_categories lc ON c.id = lc.category_id
+      WHERE lc.listing_id = ${listingId}
+      ORDER BY c.name ASC
+    `);
+    
+    return result.rows.map(row => ({
+      id: row.id,
+      name: row.name,
+      description: row.description,
+      createdAt: row.created_at
+    })) as Category[];
+  }
+  
+  async getCategoryListings(categoryId: number): Promise<Listing[]> {
+    const result = await db.execute(sql`
+      SELECT l.* FROM listings l
+      JOIN listing_categories lc ON l.id = lc.listing_id
+      WHERE lc.category_id = ${categoryId}
+      ORDER BY l.created_at DESC
+    `);
+    
+    return result.rows.map(row => ({
+      id: row.id,
+      title: row.title,
+      description: row.description,
+      items: row.items,
+      categories: row.categories,
+      pickupInstructions: row.pickup_instructions,
+      paymentInfo: row.payment_info,
+      address: row.address,
+      coordinates: row.coordinates,
+      imageUrl: row.image_url,
+      createdAt: row.created_at,
+      editToken: row.edit_token
+    })) as Listing[];
+  }
 }
 
 // In-memory storage implementation
 export class MemStorage implements IStorage {
-  private listings: Map<number, Listing>;
-  private currentId: number;
+  private listings: Record<number, Listing>;
+  private categories: Record<number, Category>;
+  private listingCategories: Record<string, { listingId: number, categoryId: number }>;
+  private listingCurrentId: number;
+  private categoryCurrentId: number;
 
   constructor() {
-    this.listings = new Map();
-    this.currentId = 1;
+    this.listings = {};
+    this.categories = {};
+    this.listingCategories = {};
+    this.listingCurrentId = 1;
+    this.categoryCurrentId = 1;
   }
 
   async createListing(listingData: CreateListing): Promise<Listing> {
-    const id = this.currentId++;
+    const id = this.listingCurrentId++;
     const editToken = nanoid();
     const createdAt = new Date();
     
@@ -310,26 +527,26 @@ export class MemStorage implements IStorage {
       editToken
     };
     
-    this.listings.set(id, listing);
+    this.listings[id] = listing;
     return listing;
   }
 
   async getListing(id: number): Promise<Listing | undefined> {
-    return this.listings.get(id);
+    return this.listings[id];
   }
 
   async getAllListings(): Promise<Listing[]> {
-    return Array.from(this.listings.values());
+    return Object.values(this.listings);
   }
 
   async getListingByEditToken(editToken: string): Promise<Listing | undefined> {
-    return Array.from(this.listings.values()).find(
+    return Object.values(this.listings).find(
       (listing) => listing.editToken === editToken
     );
   }
 
   async updateListing(id: number, listingUpdate: Partial<InsertListing>): Promise<Listing | undefined> {
-    const listing = this.listings.get(id);
+    const listing = this.listings[id];
     
     if (!listing) {
       return undefined;
@@ -351,12 +568,146 @@ export class MemStorage implements IStorage {
       editToken: listing.editToken
     };
     
-    this.listings.set(id, updatedListing);
+    this.listings[id] = updatedListing;
     return updatedListing;
   }
 
   async deleteListing(id: number): Promise<boolean> {
-    return this.listings.delete(id);
+    if (this.listings[id]) {
+      delete this.listings[id];
+      return true;
+    }
+    return false;
+  }
+  
+  // Category methods
+  async createCategory(categoryData: CreateCategory): Promise<Category> {
+    const id = this.categoryCurrentId++;
+    const createdAt = new Date();
+    
+    const category: Category = {
+      id,
+      name: categoryData.name,
+      description: categoryData.description || null,
+      createdAt
+    };
+    
+    this.categories[id] = category;
+    return category;
+  }
+  
+  async getCategory(id: number): Promise<Category | undefined> {
+    return this.categories[id];
+  }
+  
+  async getCategoryByName(name: string): Promise<Category | undefined> {
+    return Object.values(this.categories).find(
+      (category) => category.name === name
+    );
+  }
+  
+  async getAllCategories(): Promise<Category[]> {
+    return Object.values(this.categories).sort((a, b) => 
+      a.name.localeCompare(b.name)
+    );
+  }
+  
+  async updateCategory(id: number, categoryUpdate: Partial<InsertCategory>): Promise<Category | undefined> {
+    const category = this.categories[id];
+    
+    if (!category) {
+      return undefined;
+    }
+    
+    const updatedCategory: Category = {
+      id: category.id,
+      name: categoryUpdate.name ?? category.name,
+      description: categoryUpdate.description ?? category.description,
+      createdAt: category.createdAt
+    };
+    
+    this.categories[id] = updatedCategory;
+    return updatedCategory;
+  }
+  
+  async deleteCategory(id: number): Promise<boolean> {
+    // Also remove all relationships with this category
+    if (this.categories[id]) {
+      delete this.categories[id];
+      
+      // Filter out relationships with this category
+      Object.keys(this.listingCategories).forEach(key => {
+        const value = this.listingCategories[key];
+        if (value.categoryId === id) {
+          delete this.listingCategories[key];
+        }
+      });
+      
+      return true;
+    }
+    
+    return false;
+  }
+  
+  // Listing-Category relationship methods
+  async addCategoryToListing(listingId: number, categoryId: number): Promise<void> {
+    const relationshipKey = `${listingId}-${categoryId}`;
+    
+    // Only add if both the listing and category exist
+    if (this.listings[listingId] && this.categories[categoryId]) {
+      this.listingCategories[relationshipKey] = { listingId, categoryId };
+    }
+  }
+  
+  async removeCategoryFromListing(listingId: number, categoryId: number): Promise<void> {
+    const relationshipKey = `${listingId}-${categoryId}`;
+    delete this.listingCategories[relationshipKey];
+  }
+  
+  async getListingCategories(listingId: number): Promise<Category[]> {
+    const categoryIds = new Set<number>();
+    
+    // Find all category IDs related to this listing
+    Object.values(this.listingCategories).forEach(value => {
+      if (value.listingId === listingId) {
+        categoryIds.add(value.categoryId);
+      }
+    });
+    
+    // Get the actual category objects
+    const categories: Category[] = [];
+    Array.from(categoryIds).forEach(categoryId => {
+      const category = this.categories[categoryId];
+      if (category) {
+        categories.push(category);
+      }
+    });
+    
+    // Sort by name
+    return categories.sort((a, b) => a.name.localeCompare(b.name));
+  }
+  
+  async getCategoryListings(categoryId: number): Promise<Listing[]> {
+    const listingIds = new Set<number>();
+    
+    // Find all listing IDs related to this category
+    Object.values(this.listingCategories).forEach(value => {
+      if (value.categoryId === categoryId) {
+        listingIds.add(value.listingId);
+      }
+    });
+    
+    // Get the actual listing objects
+    const listings: Listing[] = [];
+    Array.from(listingIds).forEach(listingId => {
+      const listing = this.listings[listingId];
+      if (listing) {
+        listings.push(listing);
+      }
+    });
+    
+    // Sort by creation date, newest first
+    return listings.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 }
 

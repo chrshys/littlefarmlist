@@ -2,7 +2,7 @@ import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
-import { createListingSchema } from "@shared/schema";
+import { createListingSchema, createCategorySchema } from "@shared/schema";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 
@@ -141,6 +141,249 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(204).end();
     } else {
       res.status(500).json({ message: "Failed to delete listing" });
+    }
+  });
+
+  // CATEGORY ENDPOINTS
+  
+  // Create a new category
+  router.post("/categories", async (req, res) => {
+    try {
+      const categoryData = createCategorySchema.parse(req.body);
+      
+      // Check if a category with the same name already exists
+      const existingCategory = await storage.getCategoryByName(categoryData.name);
+      if (existingCategory) {
+        return res.status(409).json({ message: "A category with this name already exists" });
+      }
+      
+      const category = await storage.createCategory(categoryData);
+      res.status(201).json(category);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        res.status(400).json({ message: validationError.message });
+      } else {
+        console.error("Error creating category:", error);
+        res.status(500).json({ message: "Failed to create category" });
+      }
+    }
+  });
+
+  // Get all categories
+  router.get("/categories", async (req, res) => {
+    try {
+      const categories = await storage.getAllCategories();
+      res.json(categories);
+    } catch (error) {
+      console.error("Error fetching all categories:", error);
+      res.status(500).json({ message: "Failed to fetch categories" });
+    }
+  });
+
+  // Get a category by ID
+  router.get("/categories/:id", async (req, res) => {
+    const id = parseInt(req.params.id, 10);
+    
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid category ID" });
+    }
+    
+    const category = await storage.getCategory(id);
+    
+    if (!category) {
+      return res.status(404).json({ message: "Category not found" });
+    }
+    
+    res.json(category);
+  });
+
+  // Update a category
+  router.patch("/categories/:id", async (req, res) => {
+    const id = parseInt(req.params.id, 10);
+    
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid category ID" });
+    }
+    
+    const category = await storage.getCategory(id);
+    
+    if (!category) {
+      return res.status(404).json({ message: "Category not found" });
+    }
+    
+    try {
+      // Only validate the fields that are being updated
+      const updateSchema = createCategorySchema.partial();
+      const validatedUpdate = updateSchema.parse(req.body);
+      
+      // If name is being updated, check for uniqueness
+      if (validatedUpdate.name && validatedUpdate.name !== category.name) {
+        const existingCategory = await storage.getCategoryByName(validatedUpdate.name);
+        if (existingCategory) {
+          return res.status(409).json({ message: "A category with this name already exists" });
+        }
+      }
+      
+      const updatedCategory = await storage.updateCategory(id, validatedUpdate);
+      res.json(updatedCategory);
+    } catch (error) {
+      console.error("Error updating category:", error);
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        res.status(400).json({ message: validationError.message });
+      } else {
+        res.status(500).json({ message: "Failed to update category" });
+      }
+    }
+  });
+
+  // Delete a category
+  router.delete("/categories/:id", async (req, res) => {
+    const id = parseInt(req.params.id, 10);
+    
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid category ID" });
+    }
+    
+    const category = await storage.getCategory(id);
+    
+    if (!category) {
+      return res.status(404).json({ message: "Category not found" });
+    }
+    
+    const success = await storage.deleteCategory(id);
+    
+    if (success) {
+      res.status(204).end();
+    } else {
+      res.status(500).json({ message: "Failed to delete category" });
+    }
+  });
+
+  // Get all listings for a category
+  router.get("/categories/:id/listings", async (req, res) => {
+    const id = parseInt(req.params.id, 10);
+    
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid category ID" });
+    }
+    
+    const category = await storage.getCategory(id);
+    
+    if (!category) {
+      return res.status(404).json({ message: "Category not found" });
+    }
+    
+    try {
+      const listings = await storage.getCategoryListings(id);
+      res.json(listings);
+    } catch (error) {
+      console.error("Error fetching category listings:", error);
+      res.status(500).json({ message: "Failed to fetch listings for category" });
+    }
+  });
+
+  // LISTING-CATEGORY RELATIONSHIP ENDPOINTS
+  
+  // Get all categories for a listing
+  router.get("/listings/:id/categories", async (req, res) => {
+    const id = parseInt(req.params.id, 10);
+    
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid listing ID" });
+    }
+    
+    const listing = await storage.getListing(id);
+    
+    if (!listing) {
+      return res.status(404).json({ message: "Listing not found" });
+    }
+    
+    try {
+      const categories = await storage.getListingCategories(id);
+      res.json(categories);
+    } catch (error) {
+      console.error("Error fetching listing categories:", error);
+      res.status(500).json({ message: "Failed to fetch categories for listing" });
+    }
+  });
+
+  // Add a category to a listing
+  router.post("/listings/:listingId/categories/:categoryId", async (req, res) => {
+    const listingId = parseInt(req.params.listingId, 10);
+    const categoryId = parseInt(req.params.categoryId, 10);
+    const editToken = req.query.editToken as string;
+    
+    if (isNaN(listingId) || isNaN(categoryId)) {
+      return res.status(400).json({ message: "Invalid ID parameters" });
+    }
+    
+    if (!editToken) {
+      return res.status(401).json({ message: "Edit token is required" });
+    }
+    
+    const listing = await storage.getListing(listingId);
+    
+    if (!listing) {
+      return res.status(404).json({ message: "Listing not found" });
+    }
+    
+    if (listing.editToken !== editToken) {
+      return res.status(403).json({ message: "Invalid edit token" });
+    }
+    
+    const category = await storage.getCategory(categoryId);
+    
+    if (!category) {
+      return res.status(404).json({ message: "Category not found" });
+    }
+    
+    try {
+      await storage.addCategoryToListing(listingId, categoryId);
+      res.status(204).end();
+    } catch (error) {
+      console.error("Error adding category to listing:", error);
+      res.status(500).json({ message: "Failed to add category to listing" });
+    }
+  });
+
+  // Remove a category from a listing
+  router.delete("/listings/:listingId/categories/:categoryId", async (req, res) => {
+    const listingId = parseInt(req.params.listingId, 10);
+    const categoryId = parseInt(req.params.categoryId, 10);
+    const editToken = req.query.editToken as string;
+    
+    if (isNaN(listingId) || isNaN(categoryId)) {
+      return res.status(400).json({ message: "Invalid ID parameters" });
+    }
+    
+    if (!editToken) {
+      return res.status(401).json({ message: "Edit token is required" });
+    }
+    
+    const listing = await storage.getListing(listingId);
+    
+    if (!listing) {
+      return res.status(404).json({ message: "Listing not found" });
+    }
+    
+    if (listing.editToken !== editToken) {
+      return res.status(403).json({ message: "Invalid edit token" });
+    }
+    
+    const category = await storage.getCategory(categoryId);
+    
+    if (!category) {
+      return res.status(404).json({ message: "Category not found" });
+    }
+    
+    try {
+      await storage.removeCategoryFromListing(listingId, categoryId);
+      res.status(204).end();
+    } catch (error) {
+      console.error("Error removing category from listing:", error);
+      res.status(500).json({ message: "Failed to remove category from listing" });
     }
   });
 
