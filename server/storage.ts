@@ -29,6 +29,7 @@ export interface IStorage {
   createListing(listing: CreateListing): Promise<Listing>;
   getListing(id: number): Promise<Listing | undefined>;
   getAllListings(): Promise<Listing[]>;
+  getUserListings(userId: number): Promise<Listing[]>;
   getListingByEditToken(editToken: string): Promise<Listing | undefined>;
   updateListing(id: number, listing: Partial<InsertListing>): Promise<Listing | undefined>;
   deleteListing(id: number): Promise<boolean>;
@@ -80,7 +81,8 @@ export class DbStorage implements IStorage {
         address, 
         coordinates, 
         image_url, 
-        edit_token
+        edit_token,
+        user_id
       ) VALUES (
         ${listingData.title},
         ${listingData.description || null},
@@ -91,7 +93,8 @@ export class DbStorage implements IStorage {
         ${listingData.address || ''},
         ${listingData.coordinates ? JSON.stringify(listingData.coordinates) : null},
         ${listingData.imageUrl || null},
-        ${editToken}
+        ${editToken},
+        ${listingData.userId || null}
       )
       RETURNING *
     `);
@@ -110,7 +113,8 @@ export class DbStorage implements IStorage {
       coordinates: row.coordinates,
       imageUrl: row.image_url,
       createdAt: row.created_at,
-      editToken: row.edit_token
+      editToken: row.edit_token,
+      userId: row.user_id
     } as Listing;
   }
 
@@ -137,7 +141,8 @@ export class DbStorage implements IStorage {
       coordinates: row.coordinates,
       imageUrl: row.image_url,
       createdAt: row.created_at,
-      editToken: row.edit_token
+      editToken: row.edit_token,
+      userId: row.user_id
     } as Listing;
   }
 
@@ -159,7 +164,31 @@ export class DbStorage implements IStorage {
       coordinates: row.coordinates,
       imageUrl: row.image_url,
       createdAt: row.created_at,
-      editToken: row.edit_token
+      editToken: row.edit_token,
+      userId: row.user_id
+    })) as Listing[];
+  }
+  
+  async getUserListings(userId: number): Promise<Listing[]> {
+    const result = await db.execute(sql`
+      SELECT * FROM listings WHERE user_id = ${userId}
+    `);
+    
+    // Convert rows to camelCase for TypeScript Listing type
+    return result.rows.map(row => ({
+      id: row.id,
+      title: row.title,
+      description: row.description,
+      items: row.items,
+      categories: row.categories,
+      pickupInstructions: row.pickup_instructions,
+      paymentInfo: row.payment_info,
+      address: row.address,
+      coordinates: row.coordinates,
+      imageUrl: row.image_url,
+      createdAt: row.created_at,
+      editToken: row.edit_token,
+      userId: row.user_id
     })) as Listing[];
   }
 
@@ -186,7 +215,8 @@ export class DbStorage implements IStorage {
       coordinates: row.coordinates,
       imageUrl: row.image_url,
       createdAt: row.created_at,
-      editToken: row.edit_token
+      editToken: row.edit_token,
+      userId: row.user_id
     } as Listing;
   }
 
@@ -284,6 +314,14 @@ export class DbStorage implements IStorage {
       `);
     }
     
+    if (listingUpdate.userId !== undefined) {
+      await db.execute(sql`
+        UPDATE listings
+        SET user_id = ${listingUpdate.userId}
+        WHERE id = ${id}
+      `);
+    }
+    
     // Get the updated listing
     const result = await db.execute(sql`
       SELECT * FROM listings WHERE id = ${id}
@@ -307,7 +345,8 @@ export class DbStorage implements IStorage {
       coordinates: row.coordinates,
       imageUrl: row.image_url,
       createdAt: row.created_at,
-      editToken: row.edit_token
+      editToken: row.edit_token,
+      userId: row.user_id
     } as Listing;
   }
 
@@ -507,7 +546,8 @@ export class DbStorage implements IStorage {
       coordinates: row.coordinates,
       imageUrl: row.image_url,
       createdAt: row.created_at,
-      editToken: row.edit_token
+      editToken: row.edit_token,
+      userId: row.user_id
     })) as Listing[];
   }
 
@@ -761,7 +801,8 @@ export class DbStorage implements IStorage {
       coordinates: row.coordinates,
       imageUrl: row.image_url,
       createdAt: row.created_at,
-      editToken: row.edit_token
+      editToken: row.edit_token,
+      userId: row.user_id
     })) as Listing[];
   }
   
@@ -817,11 +858,16 @@ export class MemStorage implements IStorage {
       coordinates: listingData.coordinates || null,
       imageUrl: listingData.imageUrl || null,
       createdAt,
-      editToken
+      editToken,
+      userId: listingData.userId || null
     };
     
     this.listings[id] = listing;
     return listing;
+  }
+  
+  async getUserListings(userId: number): Promise<Listing[]> {
+    return Object.values(this.listings).filter(listing => listing.userId === userId);
   }
 
   async getListing(id: number): Promise<Listing | undefined> {
@@ -858,7 +904,8 @@ export class MemStorage implements IStorage {
       coordinates: listingUpdate.coordinates ?? listing.coordinates,
       imageUrl: listingUpdate.imageUrl ?? listing.imageUrl,
       createdAt: listing.createdAt,
-      editToken: listing.editToken
+      editToken: listing.editToken,
+      userId: listingUpdate.userId ?? listing.userId ?? null
     };
     
     this.listings[id] = updatedListing;

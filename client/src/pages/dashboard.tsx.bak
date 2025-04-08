@@ -203,7 +203,7 @@ export default function Dashboard() {
               ) : myListingsError ? (
                 <p className="text-red-500">Error loading your listings</p>
               ) : myListings && Array.isArray(myListings) && myListings.length > 0 ? (
-                myListings.map((listing: Listing) => (
+                myListings.map((listing) => (
                   <Card key={listing.id} className="overflow-hidden hover:shadow-md transition-shadow">
                     {listing.imageUrl ? (
                       <div className="h-48 overflow-hidden">
@@ -238,7 +238,7 @@ export default function Dashboard() {
                       {/* Categories display */}
                       {listing.categories && listing.categories.length > 0 && (
                         <div className="flex flex-wrap gap-1 mb-2">
-                          {listing.categories.map((category: string, index: number) => (
+                          {listing.categories.map((category, index) => (
                             <Badge key={index} variant="outline" className="text-xs">
                               {category}
                             </Badge>
@@ -247,7 +247,7 @@ export default function Dashboard() {
                       )}
                       
                       <div className="flex flex-wrap gap-2 mb-4">
-                        {listing.items.slice(0, 3).map((item: any, index: number) => (
+                        {listing.items.slice(0, 3).map((item, index) => (
                           <Badge key={index} variant="secondary" className="text-xs">
                             {item.name} – {formatCurrency(item.price)}
                           </Badge>
@@ -270,7 +270,7 @@ export default function Dashboard() {
                             Delete
                           </Button>
                         </div>
-                        <Link href={`/create?edit=${listing.id}`}>
+                        <Link href={`/create?edit=${listing.id}&token=${getMyListings()[listing.id]}`}>
                           <Button variant="outline" size="sm">
                             <Edit className="h-4 w-4 mr-1" />
                             Edit
@@ -340,7 +340,7 @@ export default function Dashboard() {
                       {/* Categories display */}
                       {listing.categories && listing.categories.length > 0 && (
                         <div className="flex flex-wrap gap-1 mb-2">
-                          {listing.categories.map((category: string, index: number) => (
+                          {listing.categories.map((category, index) => (
                             <Badge key={index} variant="outline" className="text-xs">
                               {category}
                             </Badge>
@@ -349,7 +349,7 @@ export default function Dashboard() {
                       )}
                       
                       <div className="flex flex-wrap gap-2 mb-4">
-                        {listing.items.slice(0, 3).map((item: any, index: number) => (
+                        {listing.items.slice(0, 3).map((item, index) => (
                           <Badge key={index} variant="secondary" className="text-xs">
                             {item.name} – {formatCurrency(item.price)}
                           </Badge>
@@ -398,19 +398,18 @@ export default function Dashboard() {
           </TabsContent>
         </Tabs>
       ) : (
-        // Desktop view with side-by-side columns
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-          {/* Left column - My Listings */}
+        // Desktop view with columns
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* My Listings Column */}
           <div>
             <h2 className="text-xl font-semibold mb-4">My Listings</h2>
-            
-            <div className="space-y-6">
+            <div className="grid grid-cols-1 gap-6">
               {isMyListingsLoading ? (
                 <p>Loading your listings...</p>
               ) : myListingsError ? (
                 <p className="text-red-500">Error loading your listings</p>
               ) : myListings && Array.isArray(myListings) && myListings.length > 0 ? (
-                myListings.map((listing: Listing) => (
+                myListings.map((listing) => (
                   <Card key={listing.id} className="overflow-hidden hover:shadow-md transition-shadow">
                     {listing.imageUrl ? (
                       <div className="h-48 overflow-hidden">
@@ -445,7 +444,7 @@ export default function Dashboard() {
                       {/* Categories display */}
                       {listing.categories && listing.categories.length > 0 && (
                         <div className="flex flex-wrap gap-1 mb-2">
-                          {listing.categories.map((category: string, index: number) => (
+                          {listing.categories.map((category, index) => (
                             <Badge key={index} variant="outline" className="text-xs">
                               {category}
                             </Badge>
@@ -454,7 +453,7 @@ export default function Dashboard() {
                       )}
                       
                       <div className="flex flex-wrap gap-2 mb-4">
-                        {listing.items.slice(0, 3).map((item: any, index: number) => (
+                        {listing.items.slice(0, 3).map((item, index) => (
                           <Badge key={index} variant="secondary" className="text-xs">
                             {item.name} – {formatCurrency(item.price)}
                           </Badge>
@@ -477,7 +476,7 @@ export default function Dashboard() {
                             Delete
                           </Button>
                         </div>
-                        <Link href={`/create?edit=${listing.id}`}>
+                        <Link href={`/create?edit=${listing.id}&token=${getMyListings()[listing.id]}`}>
                           <Button variant="outline" size="sm">
                             <Edit className="h-4 w-4 mr-1" />
                             Edit
@@ -505,11 +504,10 @@ export default function Dashboard() {
             </div>
           </div>
           
-          {/* Right column - Favorites */}
+          {/* Favorites Column */}
           <div>
             <h2 className="text-xl font-semibold mb-4">Favorites</h2>
-            
-            <div className="space-y-6">
+            <div className="grid grid-cols-1 gap-6">
               {isFavoritesLoading ? (
                 <p>Loading your favorites...</p>
               ) : favoritesError ? (
@@ -550,7 +548,7 @@ export default function Dashboard() {
                       {/* Categories display */}
                       {listing.categories && listing.categories.length > 0 && (
                         <div className="flex flex-wrap gap-1 mb-2">
-                          {listing.categories.map((category: string, index: number) => (
+                          {listing.categories.map((category, index) => (
                             <Badge key={index} variant="outline" className="text-xs">
                               {category}
                             </Badge>
@@ -559,7 +557,7 @@ export default function Dashboard() {
                       )}
                       
                       <div className="flex flex-wrap gap-2 mb-4">
-                        {listing.items.slice(0, 3).map((item: any, index: number) => (
+                        {listing.items.slice(0, 3).map((item, index) => (
                           <Badge key={index} variant="secondary" className="text-xs">
                             {item.name} – {formatCurrency(item.price)}
                           </Badge>

@@ -50,10 +50,15 @@ export const listings = pgTable("listings", {
   imageUrl: text("image_url"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   editToken: text("edit_token").notNull(),
+  userId: integer("user_id").references(() => users.id, { onDelete: "set null" }),
 });
 
-export const listingsRelations = relations(listings, ({ many }) => ({
+export const listingsRelations = relations(listings, ({ many, one }) => ({
   listingCategories: many(listingCategories),
+  user: one(users, {
+    fields: [listings.userId],
+    references: [users.id],
+  }),
 }));
 
 // Junction table for the many-to-many relationship between listings and categories
@@ -172,12 +177,8 @@ export const usersRelations = relations(users, ({ many }) => ({
   favorites: many(favorites)
 }));
 
-// Update listings relations to include user and favorites
-export const listingsToUserRelation = relations(listings, ({ one, many }) => ({
-  user: one(users, {
-    fields: [listings.id],
-    references: [users.id]
-  }),
+// Update listings relation to include favorites
+export const listingsFavoritesRelation = relations(listings, ({ many }) => ({
   favoritedBy: many(favorites)
 }));
 

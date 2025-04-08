@@ -21,6 +21,7 @@ export interface Listing {
   imageUrl?: string;
   createdAt: Date;
   editToken: string;
+  userId?: number;
 }
 
 export interface CreateListingForm {

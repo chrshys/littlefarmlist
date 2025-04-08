@@ -65,18 +65,18 @@ export async function createListing(listing: CreateListingForm): Promise<Listing
 // Update a listing
 export async function updateListing(
   listingId: number, 
-  editToken: string, 
   updates: Partial<CreateListingForm>
 ): Promise<Listing> {
   const updatedListing = await apiRequest({
     method: "PATCH", 
-    url: `/api/listings/${listingId}?editToken=${editToken}`, 
+    url: `/api/listings/${listingId}`, 
     body: updates
   });
   
-  // Invalidate both the specific listing and the listings collection
+  // Invalidate queries
   queryClient.invalidateQueries({ queryKey: [`/api/listings/${listingId}`] });
   queryClient.invalidateQueries({ queryKey: ['/api/listings'] });
+  queryClient.invalidateQueries({ queryKey: ['/api/user/listings'] });
   
   return updatedListing;
 }

@@ -15,6 +15,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   router.post("/listings", async (req, res) => {
     try {
       const listingData = createListingSchema.parse(req.body);
+      
+      // Add userId to the listing if user is logged in
+      if (req.user && 'id' in req.user) {
+        const userId = req.user.id as number;
+        listingData.userId = userId;
+      }
+      
       const listing = await storage.createListing(listingData);
       res.status(201).json(listing);
     } catch (error) {
@@ -37,6 +44,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch listings" });
     }
   });
+  
+  // Get listings for the current logged-in user
+  router.get("/user/listings", isAuthenticated, async (req, res) => {
+    try {
+      // Get the user ID from the session
+      const userId = (req.user as any).id;
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+      
+      const listings = await storage.getUserListings(userId);
+      res.json(listings);
+    } catch (error) {
+      console.error("Error fetching user listings:", error);
+      res.status(500).json({ message: "Failed to fetch user listings" });
+    }
+  });
 
   // Get a listing by ID
   router.get("/listings/:id", async (req, res) => {
@@ -56,16 +80,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update a listing
-  router.patch("/listings/:id", async (req, res) => {
+  router.patch("/listings/:id", isAuthenticated, async (req, res) => {
     const id = parseInt(req.params.id, 10);
-    const editToken = req.query.editToken as string;
+    const userId = (req.user as any).id;
     
     if (isNaN(id)) {
       return res.status(400).json({ message: "Invalid listing ID" });
-    }
-    
-    if (!editToken) {
-      return res.status(401).json({ message: "Edit token is required" });
     }
     
     // First try to get the listing directly
@@ -75,16 +95,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(404).json({ message: "Listing not found" });
     }
     
-    // Log tokens for debugging
-    console.log(`Comparing tokens: Listing token=${listing.editToken}, Request token=${editToken}`);
-    
-    if (listing.editToken !== editToken) {
-      // Double-check by using getListingByEditToken method
-      const listingByToken = await storage.getListingByEditToken(editToken);
-      
-      if (!listingByToken || listingByToken.id !== id) {
-        return res.status(403).json({ message: "Invalid edit token" });
-      }
+    // Check if the logged-in user is the owner of this listing
+    if (listing.userId !== userId) {
+      return res.status(403).json({ message: "You don't have permission to edit this listing" });
     }
     
     try {

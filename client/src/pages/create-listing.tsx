@@ -52,8 +52,8 @@ export default function CreateListing() {
   // Parse URL params for edit mode
   const params = new URLSearchParams(location.split('?')[1]);
   const editId = params.get('edit') ? parseInt(params.get('edit') || '0') : null;
-  const editToken = params.get('token') || null;
-  const isEditMode = Boolean(editId && editToken);
+  const editToken = null; // No longer needed but kept to avoid refactoring references to it
+  const isEditMode = Boolean(editId);
   
   // Fetch existing listing data in edit mode
   const { 
@@ -61,7 +61,10 @@ export default function CreateListing() {
     isLoading: isLoadingListing
   } = useQuery<Listing>({
     queryKey: ['/api/listings', editId],
-    queryFn: () => apiRequest({ url: `/api/listings/${editId}` }),
+    queryFn: () => apiRequest({ 
+      url: `/api/listings/${editId}`,
+      method: 'GET'
+    }),
     enabled: isEditMode && !!editId
   });
   
@@ -258,9 +261,9 @@ export default function CreateListing() {
       
       let listing: Listing;
       
-      if (isEditMode && editId && editToken) {
+      if (isEditMode && editId) {
         // Update existing listing
-        listing = await updateListing(editId, editToken, data);
+        listing = await updateListing(editId, data);
         console.log("Listing updated successfully:", listing);
         
         // Redirect to My Listings page after update
@@ -268,7 +271,7 @@ export default function CreateListing() {
           title: "Listing updated",
           description: "Your listing has been updated successfully",
         });
-        navigate("/my-listings");
+        navigate("/dashboard");
       } else {
         // Create new listing
         listing = await createListing(data);
