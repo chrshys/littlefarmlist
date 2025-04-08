@@ -8,18 +8,23 @@ interface User {
   email: string;
   firstName?: string;
   lastName?: string;
-  verified: boolean;
+  isVerified: boolean;
 }
 
 export function useAuth() {
   // Query to fetch the current user
   const { data: user, isLoading, isError, refetch } = useQuery({
     queryKey: ["/api/auth/user"],
-    queryFn: () => apiRequest<User | null>({
-      url: "/api/auth/user",
-      method: "GET",
-      on401: "returnNull",
-    }),
+    queryFn: async () => {
+      console.log("Fetching current user...");
+      const result = await apiRequest<User | null>({
+        url: "/api/auth/user",
+        method: "GET",
+        on401: "returnNull",
+      });
+      console.log("Current user result:", result);
+      return result;
+    },
     staleTime: 1000 * 60 * 5, // 5 minutes
     refetchOnWindowFocus: true,
   });

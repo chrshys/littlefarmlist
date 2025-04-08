@@ -36,12 +36,15 @@ export default function Login() {
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
     try {
+      console.log("Attempting login with:", data.email);
       const response = await apiRequest<{message: string, user: any}>({
         url: "/api/auth/login",
         method: "POST",
         body: data,
         on401: "throw",
       });
+      
+      console.log("Login response:", response);
 
       toast({
         title: "Login Successful",
@@ -52,6 +55,7 @@ export default function Login() {
       // Redirect to dashboard after successful login
       navigate("/dashboard");
     } catch (error: any) {
+      console.error("Login error:", error);
       toast({
         title: "Login Failed",
         description: error.message || "Please check your credentials and try again.",
