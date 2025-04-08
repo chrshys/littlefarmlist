@@ -70,11 +70,6 @@ export function Header() {
               Map
             </span>
           </Link>
-          <Link href="/my-listings">
-            <span className={`text-sm font-medium ${location === "/my-listings" ? "text-primary" : "text-neutral-700 hover:text-primary"} transition-colors`}>
-              My Listings
-            </span>
-          </Link>
         </nav>
 
         {/* Auth Buttons */}
@@ -166,11 +161,6 @@ export function Header() {
             <Link href="/map">
               <span className={`text-sm font-medium ${location === "/map" ? "text-primary" : "text-neutral-700 hover:text-primary"} transition-colors block py-1`}>
                 Map
-              </span>
-            </Link>
-            <Link href="/my-listings">
-              <span className={`text-sm font-medium ${location === "/my-listings" ? "text-primary" : "text-neutral-700 hover:text-primary"} transition-colors block py-1`}>
-                My Listings
               </span>
             </Link>
             {!isAuthenticated && (

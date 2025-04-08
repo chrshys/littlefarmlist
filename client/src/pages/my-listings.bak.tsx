@@ -98,17 +98,19 @@ export default function MyListings() {
   };
 
   return (
-    <main>
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-medium text-neutral-800">My listings</h2>
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold">My Listings</h1>
+          <p className="text-muted-foreground">Manage your created listings</p>
+        </div>
         <Button
-          variant="outline"
-          size="sm"
+          variant="default"
           onClick={() => navigate("/create")}
-          className="flex items-center gap-1 text-xs"
+          className="flex items-center gap-1 mt-4 md:mt-0"
         >
-          <Plus className="h-3 w-3" />
-          New listing
+          <Plus className="h-4 w-4 mr-1" />
+          Create New Listing
         </Button>
       </div>
       
@@ -129,7 +131,7 @@ export default function MyListings() {
           </div>
           <h3 className="text-lg font-medium text-neutral-800 mb-2">No listings found</h3>
           <p className="text-neutral-600 mb-4">
-            You haven't created any listings yet or they might be on another device.
+            You haven"t created any listings yet or they might be on another device.
           </p>
           <Button
             onClick={() => navigate("/create")}
@@ -145,18 +147,38 @@ export default function MyListings() {
           {myListings.map(listing => (
             <Card key={listing.id} className="overflow-hidden shadow-sm hover:shadow transition-shadow">
               <CardContent className="p-0">
+                {listing.imageUrl && (
+                  <div className="w-full h-40 overflow-hidden">
+                    <img 
+                      src={listing.imageUrl} 
+                      alt={listing.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
                 <div className="p-4 sm:p-5">
                   <div className="flex justify-between items-start mb-1 gap-2">
                     <h3 className="font-medium text-lg text-neutral-800 line-clamp-1">
                       {listing.title}
                     </h3>
                     <Badge variant="secondary" className="text-xs flex-shrink-0">
-                      {listing.items.length} {listing.items.length === 1 ? 'item' : 'items'}
+                      {listing.items.length} {listing.items.length === 1 ? "item" : "items"}
                     </Badge>
                   </div>
-                  <p className="text-sm text-neutral-500 mb-3">
+                  <p className="text-sm text-neutral-500 mb-2">
                     {formatDate(listing.createdAt)}
                   </p>
+                  
+                  {/* Categories */}
+                  {listing.categories && listing.categories.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      {listing.categories.map((category, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          {category}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                   
                   {listing.description && (
                     <p className="text-neutral-700 text-sm mb-3 line-clamp-2">
@@ -242,6 +264,6 @@ export default function MyListings() {
           ))}
         </div>
       )}
-    </main>
+    </div>
   );
 }
