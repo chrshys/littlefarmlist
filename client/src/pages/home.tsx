@@ -54,10 +54,10 @@ export default function Home() {
       {/* Hero Section */}
       <section className="mb-12 text-center">
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-neutral-900 mb-4">
-          Discover local products<br /> from your neighbours
+          Discover Goodness <br /> Right Next Door
         </h1>
         <p className="text-lg text-neutral-600 max-w-2xl mx-auto mb-8">
-          Discover locally grown and handmade goods in your community
+          Shop locally grown and handmade goods produced in your community
         </p>
         
         {/* Search Bar */}
