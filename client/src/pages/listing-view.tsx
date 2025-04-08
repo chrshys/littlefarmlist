@@ -3,12 +3,13 @@ import { useParams, useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Pencil, Save, X, ArrowLeft } from "lucide-react";
+import { Pencil, Save, X, ArrowLeft, Tag } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getListingToken, formatCurrency, updateListing } from "@/lib/listings";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { Listing, Item } from "@/types/listing";
 
 export default function ListingView() {
@@ -33,6 +34,7 @@ export default function ListingView() {
     title: "",
     description: "",
     items: [{ name: "", price: 0 }],
+    categories: [] as string[],
     pickupInstructions: "",
     paymentInfo: "",
     imageUrl: ""
@@ -83,6 +85,7 @@ export default function ListingView() {
         title: listing.title,
         description: listing.description || "",
         items: listing.items,
+        categories: listing.categories || [],
         pickupInstructions: listing.pickupInstructions,
         paymentInfo: listing.paymentInfo || "",
         imageUrl: listing.imageUrl || ""
@@ -135,6 +138,7 @@ export default function ListingView() {
         title: listing.title,
         description: listing.description || "",
         items: listing.items,
+        categories: listing.categories || [],
         pickupInstructions: listing.pickupInstructions,
         paymentInfo: listing.paymentInfo || "",
         imageUrl: listing.imageUrl || ""
@@ -224,11 +228,51 @@ export default function ListingView() {
                   onChange={(e) => handleFormChange('description', e.target.value)}
                   className="resize-none min-h-[100px]"
                 />
+                
+                <Label className="text-sm font-medium mt-3 mb-1 block flex items-center">
+                  Categories <Tag className="h-4 w-4 ml-1 text-primary-500" />
+                </Label>
+                <div className="flex flex-wrap gap-2 mt-1 mb-2">
+                  {['Vegetables', 'Fruits', 'Dairy', 'Eggs', 'Meat', 'Honey', 'Baked Goods', 'Preserves', 'Plants', 'Herbs', 'Flowers'].map((category) => (
+                    <Badge
+                      key={category}
+                      variant={editForm.categories.includes(category) ? "default" : "outline"}
+                      className={`cursor-pointer transition-colors ${
+                        editForm.categories.includes(category) 
+                          ? "hover:bg-primary/90" 
+                          : "hover:bg-secondary/50"
+                      }`}
+                      onClick={() => {
+                        const newCategories = editForm.categories.includes(category)
+                          ? editForm.categories.filter(c => c !== category) // Remove if already selected
+                          : [...editForm.categories, category]; // Add if not selected
+                        handleFormChange('categories', newCategories);
+                      }}
+                    >
+                      {category}
+                      {editForm.categories.includes(category) && (
+                        <X className="h-3 w-3 ml-1" />
+                      )}
+                    </Badge>
+                  ))}
+                </div>
               </>
             ) : (
               <>
                 <h2 className="text-xl sm:text-2xl font-medium text-neutral-800 mb-2">{listing.title}</h2>
-                {listing.description && <p className="text-neutral-600">{listing.description}</p>}
+                
+                {/* Display categories */}
+                {listing.categories && listing.categories.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mb-2">
+                    {listing.categories.map((category, index) => (
+                      <Badge key={index} variant="outline" className="text-xs">
+                        {category}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+                
+                {listing.description && <p className="text-neutral-600 mt-2">{listing.description}</p>}
               </>
             )}
           </div>

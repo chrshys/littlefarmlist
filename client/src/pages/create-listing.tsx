@@ -383,6 +383,43 @@ export default function CreateListing() {
           />
         </div>
         
+        {/* Categories */}
+        <div>
+          <Label className="text-sm font-medium text-neutral-700 mb-2 block flex items-center">
+            Categories <Tag className="h-4 w-4 ml-1 text-primary-500" />
+          </Label>
+          
+          {/* Hidden input for categories data */}
+          <input 
+            type="hidden" 
+            id="categories" 
+            {...register("categories")} 
+          />
+          
+          <div className="flex flex-wrap gap-2 mt-2">
+            {categories.map((category) => (
+              <Badge
+                key={category}
+                variant={selectedCategories.includes(category) ? "default" : "outline"}
+                className={`cursor-pointer transition-colors ${
+                  selectedCategories.includes(category) 
+                    ? "hover:bg-primary/90" 
+                    : "hover:bg-secondary/50"
+                }`}
+                onClick={() => handleCategoryToggle(category)}
+              >
+                {category}
+                {selectedCategories.includes(category) && (
+                  <X className="h-3 w-3 ml-1" />
+                )}
+              </Badge>
+            ))}
+          </div>
+          <p className="text-xs text-neutral-500 mt-2">
+            Select categories that best describe your products
+          </p>
+        </div>
+        
         {/* Image Upload */}
         <div>
           <Label htmlFor="image" className="text-sm font-medium text-neutral-700 mb-2 block">

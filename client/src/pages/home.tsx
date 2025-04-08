@@ -174,6 +174,18 @@ export default function Home() {
                     {formatDate(listing.createdAt)}
                   </p>
                   
+                  {/* Categories display */}
+                  {listing.categories && listing.categories.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      {listing.categories.map((category, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          {category}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* Items display */}
                   <div className="flex flex-wrap gap-2 mb-4">
                     {listing.items.slice(0, 3).map((item, index) => (
                       <Badge key={index} variant="secondary" className="text-xs">

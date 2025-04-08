@@ -163,9 +163,20 @@ export default function MyListings() {
                       {listing.items.length} {listing.items.length === 1 ? "item" : "items"}
                     </Badge>
                   </div>
-                  <p className="text-sm text-neutral-500 mb-3">
+                  <p className="text-sm text-neutral-500 mb-2">
                     {formatDate(listing.createdAt)}
                   </p>
+                  
+                  {/* Categories */}
+                  {listing.categories && listing.categories.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      {listing.categories.map((category, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          {category}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                   
                   {listing.description && (
                     <p className="text-neutral-700 text-sm mb-3 line-clamp-2">
