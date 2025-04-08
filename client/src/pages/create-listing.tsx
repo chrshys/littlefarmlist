@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { CreateListingForm, Listing, Item } from "@/types/listing";
 import { createListing, updateListing, getRandomNiagaraAddress, niagaraAddresses, imageToBase64 } from "@/lib/listings";
+import { apiRequest } from "@/lib/queryClient";
 import { Badge } from "@/components/ui/badge";
 
 // Validation schema based on our shared schema
@@ -59,7 +60,8 @@ export default function CreateListing() {
     data: existingListing,
     isLoading: isLoadingListing
   } = useQuery<Listing>({
-    queryKey: [`/api/listings/${editId}`],
+    queryKey: ['/api/listings', editId],
+    queryFn: () => apiRequest({ url: `/api/listings/${editId}` }),
     enabled: isEditMode && !!editId
   });
   
