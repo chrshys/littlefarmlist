@@ -53,11 +53,13 @@ export async function createListing(listing: CreateListingForm): Promise<Listing
     body: listing
   });
   
-  // Save edit token to localStorage
+  // Save edit token to localStorage as a backup (will eventually be removed)
   saveListingToken(newListing.id, newListing.editToken);
   
   // Invalidate the listings query to ensure updated data on dashboard
   queryClient.invalidateQueries({ queryKey: ['/api/listings'] });
+  // Also invalidate user listings
+  queryClient.invalidateQueries({ queryKey: ['/api/user/listings'] });
   
   return newListing;
 }
@@ -82,17 +84,19 @@ export async function updateListing(
 }
 
 // Delete a listing
-export async function deleteListing(listingId: number, editToken: string): Promise<boolean> {
+export async function deleteListing(listingId: number, editToken?: string): Promise<boolean> {
+  // We don't need the editToken anymore but keeping it as optional parameter for backward compatibility
   await apiRequest({
     method: "DELETE", 
-    url: `/api/listings/${listingId}?editToken=${editToken}`
+    url: `/api/listings/${listingId}`
   });
   
-  // Remove from localStorage
+  // Remove from localStorage (legacy cleanup)
   deleteListingToken(listingId);
   
-  // Invalidate the listings query to ensure dashboard updates
+  // Invalidate the queries to ensure dashboard updates
   queryClient.invalidateQueries({ queryKey: ['/api/listings'] });
+  queryClient.invalidateQueries({ queryKey: ['/api/user/listings'] });
   
   return true;
 }

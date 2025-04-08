@@ -119,16 +119,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Delete a listing
-  router.delete("/listings/:id", async (req, res) => {
+  router.delete("/listings/:id", isAuthenticated, async (req, res) => {
     const id = parseInt(req.params.id, 10);
-    const editToken = req.query.editToken as string;
+    const userId = (req.user as any).id;
     
     if (isNaN(id)) {
       return res.status(400).json({ message: "Invalid listing ID" });
-    }
-    
-    if (!editToken) {
-      return res.status(401).json({ message: "Edit token is required" });
     }
     
     // First try to get the listing directly
@@ -138,16 +134,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(404).json({ message: "Listing not found" });
     }
     
-    // Log tokens for debugging
-    console.log(`Comparing tokens for delete: Listing token=${listing.editToken}, Request token=${editToken}`);
-    
-    if (listing.editToken !== editToken) {
-      // Double-check by using getListingByEditToken method
-      const listingByToken = await storage.getListingByEditToken(editToken);
-      
-      if (!listingByToken || listingByToken.id !== id) {
-        return res.status(403).json({ message: "Invalid edit token" });
-      }
+    // Check if the logged-in user is the owner of this listing
+    if (listing.userId !== userId) {
+      return res.status(403).json({ message: "You don't have permission to delete this listing" });
     }
     
     const success = await storage.deleteListing(id);

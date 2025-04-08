@@ -94,6 +94,7 @@ export const createListingSchema = insertListingSchema.extend({
   pickupInstructions: z.string().min(5, "Pickup instructions are required"),
   address: z.string().min(5, "Address is required"),
   coordinates: coordinatesSchema.optional(),
+  userId: z.number().optional(),
 }).omit({
   editToken: true, // Allow server to generate this
 });

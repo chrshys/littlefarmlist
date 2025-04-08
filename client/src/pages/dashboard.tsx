@@ -67,9 +67,9 @@ export default function Dashboard() {
   
   // Delete listing mutation
   const deleteListingMutation = useMutation({
-    mutationFn: async ({ id, editToken }: { id: number, editToken: string }) => {
+    mutationFn: async ({ id }: { id: number }) => {
       return apiRequest({
-        url: `/api/listings/${id}?editToken=${editToken}`,
+        url: `/api/listings/${id}`,
         method: 'DELETE'
       });
     },
@@ -126,18 +126,8 @@ export default function Dashboard() {
   
   // Delete a listing
   const handleDelete = (listing: Listing) => {
-    const editToken = getMyListings()[listing.id];
-    if (!editToken) {
-      toast({
-        title: "Error",
-        description: "You don't have permission to delete this listing",
-        variant: "destructive",
-      });
-      return;
-    }
-    
     if (window.confirm("Are you sure you want to delete this listing?")) {
-      deleteListingMutation.mutate({ id: listing.id, editToken });
+      deleteListingMutation.mutate({ id: listing.id });
     }
   };
   
