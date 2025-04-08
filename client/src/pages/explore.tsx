@@ -16,12 +16,35 @@ export default function Explore() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   
-  // Fetch all listings
-  const { data: listings = [], isLoading } = useQuery<Listing[]>({
-    queryKey: ["/api/listings"],
+  // Fetch categories from API
+  const { data: categoriesData = [], isLoading: categoriesLoading } = useQuery<{ id: number, name: string, description: string }[]>({
+    queryKey: ["/api/categories"],
   });
   
-  // Filter listings based on search term and category
+  // Get category ID from selected category name
+  const getCategoryId = (categoryName: string): number | null => {
+    if (categoryName === "All") return null;
+    const category = categoriesData.find(cat => cat.name === categoryName);
+    return category ? category.id : null;
+  };
+  
+  // Process categories for display
+  // Add our special 'All' option at the beginning
+  const categories = ["All", ...categoriesData.map(cat => cat.name)];
+  
+  // Determine if we need a category-filtered API call
+  const categoryId = getCategoryId(selectedCategory);
+  const queryKey = categoryId 
+    ? [`/api/categories/${categoryId}/listings`]
+    : ["/api/listings"];
+  
+  // Fetch listings (either all or by category)
+  const { data: listings = [], isLoading: listingsLoading } = useQuery<Listing[]>({
+    queryKey,
+    enabled: categoriesLoading === false, // Only fetch listings after categories are loaded
+  });
+  
+  // Filter listings based on search term
   const filteredListings = listings.filter(listing => {
     // Filter by search term if provided
     const matchesSearchTerm = !searchTerm || 
@@ -29,20 +52,11 @@ export default function Explore() {
       listing.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       listing.items.some(item => item.name.toLowerCase().includes(searchTerm.toLowerCase()));
     
-    // Filter by category if not "All"
-    const matchesCategory = selectedCategory === "All" || 
-      // Here you would ideally have a category field on the listing
-      // For now, we'll just simulate matching based on title and items
-      listing.title.toLowerCase().includes(selectedCategory.toLowerCase()) ||
-      listing.items.some(item => item.name.toLowerCase().includes(selectedCategory.toLowerCase()));
-    
-    return matchesSearchTerm && matchesCategory;
+    return matchesSearchTerm;
   });
   
-  // Categories for filtering
-  const categories = [
-    "All", "Fruits", "Vegetables", "Eggs", "Dairy", "Baked Goods", "Crafts"
-  ];
+  // Loading state for components
+  const isLoading = listingsLoading || categoriesLoading;
   
   return (
     <main className="mt-8 pb-12">
@@ -182,6 +196,17 @@ export default function Explore() {
                   <p className="text-sm text-neutral-500 mb-3">
                     {formatDate(listing.createdAt)}
                   </p>
+                  
+                  {/* Categories display */}
+                  {listing.categories && listing.categories.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      {listing.categories.map((category, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          {category}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                   
                   <div className="flex flex-wrap gap-2 mb-4">
                     {listing.items.slice(0, 3).map((item, index) => (
