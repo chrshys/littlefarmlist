@@ -42,11 +42,19 @@ export function Header() {
 
         {/* Navigation - Desktop */}
         <nav className="hidden md:flex items-center space-x-6">
-          <Link href="/">
-            <span className={`text-sm font-medium ${location === "/" ? "text-primary" : "text-neutral-700 hover:text-primary"} transition-colors`}>
-              Home
-            </span>
-          </Link>
+          {isAuthenticated ? (
+            <Link href="/dashboard">
+              <span className={`text-sm font-medium ${location === "/dashboard" ? "text-primary" : "text-neutral-700 hover:text-primary"} transition-colors`}>
+                Dashboard
+              </span>
+            </Link>
+          ) : (
+            <Link href="/">
+              <span className={`text-sm font-medium ${location === "/" ? "text-primary" : "text-neutral-700 hover:text-primary"} transition-colors`}>
+                Home
+              </span>
+            </Link>
+          )}
           <Link href="/explore">
             <span className={`text-sm font-medium ${location === "/explore" ? "text-primary" : "text-neutral-700 hover:text-primary"} transition-colors`}>
               Explore
@@ -67,13 +75,6 @@ export function Header() {
               My Listings
             </span>
           </Link>
-          {isAuthenticated && (
-            <Link href="/dashboard">
-              <span className={`text-sm font-medium ${location === "/dashboard" ? "text-primary" : "text-neutral-700 hover:text-primary"} transition-colors`}>
-                Dashboard
-              </span>
-            </Link>
-          )}
         </nav>
 
         {/* Auth Buttons */}
@@ -139,11 +140,19 @@ export function Header() {
       {isMobileMenuOpen && (
         <div className="md:hidden mt-4 border-t pt-4">
           <nav className="flex flex-col space-y-3">
-            <Link href="/">
-              <span className={`text-sm font-medium ${location === "/" ? "text-primary" : "text-neutral-700 hover:text-primary"} transition-colors block py-1`}>
-                Home
-              </span>
-            </Link>
+            {isAuthenticated ? (
+              <Link href="/dashboard">
+                <span className={`text-sm font-medium ${location === "/dashboard" ? "text-primary" : "text-neutral-700 hover:text-primary"} transition-colors block py-1`}>
+                  Dashboard
+                </span>
+              </Link>
+            ) : (
+              <Link href="/">
+                <span className={`text-sm font-medium ${location === "/" ? "text-primary" : "text-neutral-700 hover:text-primary"} transition-colors block py-1`}>
+                  Home
+                </span>
+              </Link>
+            )}
             <Link href="/explore">
               <span className={`text-sm font-medium ${location === "/explore" ? "text-primary" : "text-neutral-700 hover:text-primary"} transition-colors block py-1`}>
                 Explore
@@ -164,13 +173,6 @@ export function Header() {
                 My Listings
               </span>
             </Link>
-            {isAuthenticated && (
-              <Link href="/dashboard">
-                <span className={`text-sm font-medium ${location === "/dashboard" ? "text-primary" : "text-neutral-700 hover:text-primary"} transition-colors block py-1`}>
-                  Dashboard
-                </span>
-              </Link>
-            )}
             {!isAuthenticated && (
               <Link href="/login">
                 <span className={`text-sm font-medium ${location === "/login" ? "text-primary" : "text-neutral-700 hover:text-primary"} transition-colors block py-1`}>
