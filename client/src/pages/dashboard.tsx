@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { Trash, Edit, Share2, HeartOff } from "lucide-react";
-import { formatCurrency, formatDate } from "@/lib/listings";
+import { formatCurrency, formatDate, getMyListings } from "@/lib/listings";
 
 export default function Dashboard() {
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
@@ -127,16 +127,7 @@ export default function Dashboard() {
     });
   };
   
-  // Helper function to get my listings from localStorage
-  function getMyListings(): Record<number, string> {
-    try {
-      const myListings = localStorage.getItem('myListings');
-      return myListings ? JSON.parse(myListings) : {};
-    } catch (e) {
-      console.error('Error parsing my listings:', e);
-      return {};
-    }
-  }
+  // Using imported getMyListings() function from '@/lib/listings'
   
   // Delete a listing
   const handleDelete = (listing: Listing) => {
