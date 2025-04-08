@@ -63,6 +63,14 @@ export default function CreateListing() {
     enabled: isEditMode && !!editId
   });
   
+  // Debug log to check what's happening
+  useEffect(() => {
+    if (isEditMode) {
+      console.log('Edit mode detected:', { editId, editToken });
+      console.log('Existing listing:', existingListing);
+    }
+  }, [editId, editToken, existingListing, isEditMode]);
+  
   // Available categories
   const categories = [
     "Vegetables", 
@@ -113,11 +121,23 @@ export default function CreateListing() {
         address: existingListing.address,
         pickupInstructions: existingListing.pickupInstructions,
         paymentInfo: existingListing.paymentInfo || "",
+        imageUrl: existingListing.imageUrl || "",
       });
       
       // Set preview image if exists
       if (existingListing.imageUrl) {
         setPreviewImage(existingListing.imageUrl);
+        
+        // Also need to update the hidden input field
+        setTimeout(() => {
+          const imageUrlField = document.getElementById('imageUrl') as HTMLInputElement;
+          if (imageUrlField) {
+            imageUrlField.value = existingListing.imageUrl || '';
+            // Trigger an input event to ensure react-hook-form updates
+            const event = new Event('input', { bubbles: true });
+            imageUrlField.dispatchEvent(event);
+          }
+        }, 0);
       }
       
       // Set categories if available
