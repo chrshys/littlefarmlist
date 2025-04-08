@@ -49,9 +49,12 @@ export default function CreateListing() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   
   // Parse URL params for edit mode
-  const params = new URLSearchParams(location.split('?')[1]);
+  const queryString = location.includes('?') ? location.split('?')[1] : '';
+  const params = new URLSearchParams(queryString);
   const editId = params.get('edit') ? parseInt(params.get('edit') || '0') : null;
   const isEditMode = Boolean(editId);
+  
+  console.log('URL location:', location, 'Query string:', queryString, 'Edit ID:', editId);
   
   console.log('Mode:', isEditMode ? 'Edit' : 'Create', editId);
   

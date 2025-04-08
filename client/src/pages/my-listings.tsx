@@ -25,9 +25,11 @@ export default function MyListings() {
     staleTime: 60 * 1000 // 1 minute
   });
   
-  // Handle edit - now uses account authentication instead of edit tokens
+  // Handle edit using account authentication
   const handleEdit = (id: number) => {
-    navigate(`/create?edit=${id}`);
+    console.log(`Navigating to edit listing: ${id}`);
+    // Adding timestamps to prevent browser from using cached versions
+    navigate(`/create?edit=${id}&t=${Date.now()}`);
   };
   
   // Handle share
