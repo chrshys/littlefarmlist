@@ -217,35 +217,6 @@ export default function CreateListing() {
       </div>
       
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        {/* Location/Address */}
-        <div>
-          <div className="flex justify-between items-center mb-2">
-            <Label htmlFor="address" className="text-sm font-medium text-neutral-700 flex items-center">
-              Farm Address <MapPin className="h-4 w-4 ml-1 text-primary-500" />
-            </Label>
-            <Button
-              type="button"
-              variant="link"
-              className="text-sm text-primary-500 hover:text-primary-600 font-medium p-0 h-auto"
-              onClick={suggestNiagaraAddress}
-            >
-              Suggest Niagara address
-            </Button>
-          </div>
-          <Input
-            id="address"
-            placeholder="e.g., 123 Niagara Stone Road, Niagara-on-the-Lake, ON"
-            {...register("address")}
-            className={errors.address ? "border-red-300" : ""}
-          />
-          {errors.address && (
-            <p className="text-sm text-red-500 mt-1">{errors.address.message}</p>
-          )}
-          <p className="text-xs text-neutral-500 mt-1">
-            This address will be shown on the map to help buyers find your farm
-          </p>
-        </div>
-
         {/* Listing Title */}
         <div>
           <Label htmlFor="title" className="text-sm font-medium text-neutral-700 mb-2 block">
@@ -351,35 +322,6 @@ export default function CreateListing() {
           )}
         </div>
         
-        {/* Pickup Instructions */}
-        <div>
-          <Label htmlFor="pickupInstructions" className="text-sm font-medium text-neutral-700 mb-2 block">
-            Pickup instructions
-          </Label>
-          <Textarea
-            id="pickupInstructions"
-            placeholder="e.g., Available at the end of my driveway from 2-6pm"
-            className="resize-none"
-            {...register("pickupInstructions")}
-          />
-          {errors.pickupInstructions && (
-            <p className="text-sm text-red-500 mt-1">{errors.pickupInstructions.message}</p>
-          )}
-        </div>
-        
-        {/* Payment Info */}
-        <div>
-          <Label htmlFor="paymentInfo" className="text-sm font-medium text-neutral-700 mb-2 block">
-            Payment info (optional)
-          </Label>
-          <Textarea
-            id="paymentInfo"
-            placeholder="e.g., Cash or e-transfer to..."
-            className="resize-none"
-            {...register("paymentInfo")}
-          />
-        </div>
-        
         {/* Categories */}
         <div>
           <Label className="text-sm font-medium text-neutral-700 mb-2 block flex items-center">
@@ -466,6 +408,64 @@ export default function CreateListing() {
               </div>
             </div>
           )}
+        </div>
+        
+        {/* Location/Address */}
+        <div>
+          <div className="flex justify-between items-center mb-2">
+            <Label htmlFor="address" className="text-sm font-medium text-neutral-700 flex items-center">
+              Farm Address <MapPin className="h-4 w-4 ml-1 text-primary-500" />
+            </Label>
+            <Button
+              type="button"
+              variant="link"
+              className="text-sm text-primary-500 hover:text-primary-600 font-medium p-0 h-auto"
+              onClick={suggestNiagaraAddress}
+            >
+              Suggest Niagara address
+            </Button>
+          </div>
+          <Input
+            id="address"
+            placeholder="e.g., 123 Niagara Stone Road, Niagara-on-the-Lake, ON"
+            {...register("address")}
+            className={errors.address ? "border-red-300" : ""}
+          />
+          {errors.address && (
+            <p className="text-sm text-red-500 mt-1">{errors.address.message}</p>
+          )}
+          <p className="text-xs text-neutral-500 mt-1">
+            This address will be shown on the map to help buyers find your farm
+          </p>
+        </div>
+        
+        {/* Pickup Instructions */}
+        <div>
+          <Label htmlFor="pickupInstructions" className="text-sm font-medium text-neutral-700 mb-2 block">
+            Pickup instructions
+          </Label>
+          <Textarea
+            id="pickupInstructions"
+            placeholder="e.g., Available at the end of my driveway from 2-6pm"
+            className="resize-none"
+            {...register("pickupInstructions")}
+          />
+          {errors.pickupInstructions && (
+            <p className="text-sm text-red-500 mt-1">{errors.pickupInstructions.message}</p>
+          )}
+        </div>
+        
+        {/* Payment Info */}
+        <div>
+          <Label htmlFor="paymentInfo" className="text-sm font-medium text-neutral-700 mb-2 block">
+            Payment info (optional)
+          </Label>
+          <Textarea
+            id="paymentInfo"
+            placeholder="e.g., Cash or e-transfer to..."
+            className="resize-none"
+            {...register("paymentInfo")}
+          />
         </div>
         
         {/* Submit Button */}
