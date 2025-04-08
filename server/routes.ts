@@ -2,9 +2,11 @@ import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
-import { createListingSchema, createCategorySchema } from "@shared/schema";
+import { createListingSchema, createCategorySchema, insertUserSchema, loginUserSchema } from "@shared/schema";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
+import passport from "./auth";
+import { isAuthenticated } from "./auth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const router = express.Router();
@@ -146,8 +148,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // CATEGORY ENDPOINTS
   
-  // Create a new category
-  router.post("/categories", async (req, res) => {
+  // Create a new category - protected by authentication
+  router.post("/categories", isAuthenticated, async (req, res) => {
     try {
       const categoryData = createCategorySchema.parse(req.body);
       
@@ -198,8 +200,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(category);
   });
 
-  // Update a category
-  router.patch("/categories/:id", async (req, res) => {
+  // Update a category - protected by authentication
+  router.patch("/categories/:id", isAuthenticated, async (req, res) => {
     const id = parseInt(req.params.id, 10);
     
     if (isNaN(id)) {
@@ -238,8 +240,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Delete a category
-  router.delete("/categories/:id", async (req, res) => {
+  // Delete a category - protected by authentication
+  router.delete("/categories/:id", isAuthenticated, async (req, res) => {
     const id = parseInt(req.params.id, 10);
     
     if (isNaN(id)) {
@@ -282,6 +284,100 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error fetching category listings:", error);
       res.status(500).json({ message: "Failed to fetch listings for category" });
     }
+  });
+
+  // AUTHENTICATION ENDPOINTS
+
+  // Register a new user
+  router.post("/auth/register", async (req, res) => {
+    try {
+      const userData = insertUserSchema.parse(req.body);
+      
+      // Check if user with this email already exists
+      const existingUserByEmail = await storage.getUserByEmail(userData.email);
+      if (existingUserByEmail) {
+        return res.status(409).json({ message: "User with this email already exists" });
+      }
+      
+      // Check if user with this username already exists
+      const existingUserByUsername = await storage.getUserByUsername(userData.username);
+      if (existingUserByUsername) {
+        return res.status(409).json({ message: "User with this username already exists" });
+      }
+      
+      // Create new user
+      const user = await storage.createUser(userData);
+      
+      // Remove sensitive data before sending response
+      const { passwordHash, ...userWithoutPassword } = user;
+      
+      res.status(201).json(userWithoutPassword);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        res.status(400).json({ message: validationError.message });
+      } else {
+        console.error("Error registering user:", error);
+        res.status(500).json({ message: "Failed to register user" });
+      }
+    }
+  });
+  
+  // Login
+  router.post("/auth/login", (req, res, next) => {
+    try {
+      // Validate request body
+      const loginData = loginUserSchema.parse(req.body);
+      
+      // Use passport for authentication
+      passport.authenticate("local", (err: any, user: any, info: any) => {
+        if (err) {
+          return next(err);
+        }
+        
+        if (!user) {
+          return res.status(401).json({ message: info?.message || "Invalid credentials" });
+        }
+        
+        // Log in the user
+        req.logIn(user, (loginErr) => {
+          if (loginErr) {
+            return next(loginErr);
+          }
+          
+          // Remove sensitive data before sending response
+          const { passwordHash, ...userWithoutPassword } = user;
+          return res.json({
+            message: "Login successful",
+            user: userWithoutPassword
+          });
+        });
+      })(req, res, next);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        res.status(400).json({ message: validationError.message });
+      } else {
+        next(error);
+      }
+    }
+  });
+  
+  // Logout
+  router.post("/auth/logout", (req, res) => {
+    req.logout(function(err) {
+      if (err) { 
+        return res.status(500).json({ message: "Error logging out" }); 
+      }
+      res.json({ message: "Logged out successfully" });
+    });
+  });
+  
+  // Get current logged-in user
+  router.get("/auth/user", isAuthenticated, (req, res) => {
+    // Remove sensitive data before sending response
+    const { passwordHash, ...userWithoutPassword } = req.user as any;
+    res.json(userWithoutPassword);
   });
 
   // LISTING-CATEGORY RELATIONSHIP ENDPOINTS

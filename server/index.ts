@@ -1,10 +1,54 @@
 import express, { type Request, Response, NextFunction } from "express";
+import session from "express-session";
+import connectPgSimple from "connect-pg-simple";
+import { Pool } from "pg";
+import passport from "./auth";
+import { currentUser } from "./auth";
+import MemoryStore from "memorystore";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { pool } from "./db";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Set up session
+const isProduction = app.get("env") === "production";
+const sessionSecret = process.env.SESSION_SECRET || 'small-things-secret-key';
+
+// Use PostgreSQL for sessions in production, memory store in development
+let sessionStore;
+if (isProduction) {
+  const PgSession = connectPgSimple(session);
+  sessionStore = new PgSession({
+    pool,
+    tableName: 'session'
+  });
+} else {
+  const MemStore = MemoryStore(session);
+  sessionStore = new MemStore({
+    checkPeriod: 86400000 // prune expired entries every 24h
+  });
+}
+
+app.use(session({
+  store: sessionStore,
+  secret: sessionSecret,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
+    secure: isProduction
+  }
+}));
+
+// Initialize Passport and restore authentication state from session
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Add current user to response locals
+app.use(currentUser);
 
 app.use((req, res, next) => {
   const start = Date.now();

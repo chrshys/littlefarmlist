@@ -1,9 +1,11 @@
 import { nanoid } from "nanoid";
 import { eq, sql, and, inArray } from "drizzle-orm";
+import { compare, hash } from "bcryptjs";
 import {
   listings,
   categories,
   listingCategories,
+  users,
   type Listing,
   type InsertListing,
   type CreateListing, 
@@ -12,7 +14,10 @@ import {
   type Category,
   type InsertCategory,
   type CreateCategory,
-  type ListingCategory
+  type ListingCategory,
+  type InsertUser,
+  type User,
+  type LoginUser
 } from "@shared/schema";
 import { db } from "./db";
 
@@ -39,6 +44,15 @@ export interface IStorage {
   removeCategoryFromListing(listingId: number, categoryId: number): Promise<void>;
   getListingCategories(listingId: number): Promise<Category[]>;
   getCategoryListings(categoryId: number): Promise<Listing[]>;
+  
+  // User methods
+  createUser(userData: InsertUser): Promise<User>;
+  getUserById(id: number): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
+  updateUser(id: number, userData: Partial<InsertUser>): Promise<User | undefined>;
+  verifyUser(email: string): Promise<boolean>;
+  validatePassword(email: string, password: string): Promise<User | null>;
 }
 
 // PostgreSQL database storage implementation
@@ -488,22 +502,212 @@ export class DbStorage implements IStorage {
       editToken: row.edit_token
     })) as Listing[];
   }
+
+  // User methods implementation
+  async createUser(userData: InsertUser): Promise<User> {
+    // Hash the password before storing
+    const passwordHash = await hash(userData.password, 10);
+    
+    const result = await db.execute(sql`
+      INSERT INTO users (
+        email,
+        username,
+        password_hash,
+        first_name,
+        last_name,
+        is_verified
+      ) VALUES (
+        ${userData.email},
+        ${userData.username},
+        ${passwordHash},
+        ${userData.firstName || null},
+        ${userData.lastName || null},
+        false
+      )
+      RETURNING *
+    `);
+    
+    const row = result.rows[0];
+    return {
+      id: row.id,
+      email: row.email,
+      username: row.username,
+      passwordHash: row.password_hash,
+      firstName: row.first_name,
+      lastName: row.last_name,
+      isVerified: row.is_verified,
+      createdAt: row.created_at
+    } as User;
+  }
+  
+  async getUserById(id: number): Promise<User | undefined> {
+    const result = await db.execute(sql`
+      SELECT * FROM users WHERE id = ${id}
+    `);
+    
+    if (result.rows.length === 0) {
+      return undefined;
+    }
+    
+    const row = result.rows[0];
+    return {
+      id: row.id,
+      email: row.email,
+      username: row.username,
+      passwordHash: row.password_hash,
+      firstName: row.first_name,
+      lastName: row.last_name,
+      isVerified: row.is_verified,
+      createdAt: row.created_at
+    } as User;
+  }
+  
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const result = await db.execute(sql`
+      SELECT * FROM users WHERE email = ${email}
+    `);
+    
+    if (result.rows.length === 0) {
+      return undefined;
+    }
+    
+    const row = result.rows[0];
+    return {
+      id: row.id,
+      email: row.email,
+      username: row.username,
+      passwordHash: row.password_hash,
+      firstName: row.first_name,
+      lastName: row.last_name,
+      isVerified: row.is_verified,
+      createdAt: row.created_at
+    } as User;
+  }
+  
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const result = await db.execute(sql`
+      SELECT * FROM users WHERE username = ${username}
+    `);
+    
+    if (result.rows.length === 0) {
+      return undefined;
+    }
+    
+    const row = result.rows[0];
+    return {
+      id: row.id,
+      email: row.email,
+      username: row.username,
+      passwordHash: row.password_hash,
+      firstName: row.first_name,
+      lastName: row.last_name,
+      isVerified: row.is_verified,
+      createdAt: row.created_at
+    } as User;
+  }
+  
+  async updateUser(id: number, userData: Partial<InsertUser>): Promise<User | undefined> {
+    const existingUser = await this.getUserById(id);
+    
+    if (!existingUser) {
+      return undefined;
+    }
+    
+    if (Object.keys(userData).length === 0) {
+      return existingUser;
+    }
+    
+    if (userData.email !== undefined) {
+      await db.execute(sql`
+        UPDATE users
+        SET email = ${userData.email}
+        WHERE id = ${id}
+      `);
+    }
+    
+    if (userData.username !== undefined) {
+      await db.execute(sql`
+        UPDATE users
+        SET username = ${userData.username}
+        WHERE id = ${id}
+      `);
+    }
+    
+    if (userData.password !== undefined) {
+      const passwordHash = await hash(userData.password, 10);
+      await db.execute(sql`
+        UPDATE users
+        SET password_hash = ${passwordHash}
+        WHERE id = ${id}
+      `);
+    }
+    
+    if (userData.firstName !== undefined) {
+      await db.execute(sql`
+        UPDATE users
+        SET first_name = ${userData.firstName}
+        WHERE id = ${id}
+      `);
+    }
+    
+    if (userData.lastName !== undefined) {
+      await db.execute(sql`
+        UPDATE users
+        SET last_name = ${userData.lastName}
+        WHERE id = ${id}
+      `);
+    }
+    
+    // Get the updated user
+    return await this.getUserById(id);
+  }
+  
+  async verifyUser(email: string): Promise<boolean> {
+    const result = await db.execute(sql`
+      UPDATE users
+      SET is_verified = true
+      WHERE email = ${email}
+      RETURNING id
+    `);
+    
+    return result.rows.length > 0;
+  }
+  
+  async validatePassword(email: string, password: string): Promise<User | null> {
+    const user = await this.getUserByEmail(email);
+    
+    if (!user) {
+      return null;
+    }
+    
+    const isValid = await compare(password, user.passwordHash);
+    
+    if (!isValid) {
+      return null;
+    }
+    
+    return user;
+  }
 }
 
 // In-memory storage implementation
 export class MemStorage implements IStorage {
   private listings: Record<number, Listing>;
   private categories: Record<number, Category>;
+  private users: Record<number, User>;
   private listingCategories: Record<string, { listingId: number, categoryId: number }>;
   private listingCurrentId: number;
   private categoryCurrentId: number;
+  private userCurrentId: number;
 
   constructor() {
     this.listings = {};
     this.categories = {};
+    this.users = {};
     this.listingCategories = {};
     this.listingCurrentId = 1;
     this.categoryCurrentId = 1;
+    this.userCurrentId = 1;
   }
 
   async createListing(listingData: CreateListing): Promise<Listing> {
@@ -708,6 +912,96 @@ export class MemStorage implements IStorage {
     
     // Sort by creation date, newest first
     return listings.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  // User methods implementation
+  async createUser(userData: InsertUser): Promise<User> {
+    const id = this.userCurrentId++;
+    // Hash the password with bcryptjs
+    const passwordHash = await hash(userData.password, 10);
+    const createdAt = new Date();
+    
+    const user: User = {
+      id,
+      email: userData.email,
+      username: userData.username,
+      passwordHash,
+      firstName: userData.firstName || null,
+      lastName: userData.lastName || null,
+      isVerified: false,
+      createdAt
+    };
+    
+    this.users[id] = user;
+    return user;
+  }
+  
+  async getUserById(id: number): Promise<User | undefined> {
+    return this.users[id];
+  }
+  
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    return Object.values(this.users).find(
+      (user) => user.email === email
+    );
+  }
+  
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    return Object.values(this.users).find(
+      (user) => user.username === username
+    );
+  }
+  
+  async updateUser(id: number, userData: Partial<InsertUser>): Promise<User | undefined> {
+    const user = this.users[id];
+    
+    if (!user) {
+      return undefined;
+    }
+    
+    // Create a fresh updated user
+    const updatedUser: User = {
+      ...user,
+      email: userData.email ?? user.email,
+      username: userData.username ?? user.username,
+      firstName: userData.firstName ?? user.firstName,
+      lastName: userData.lastName ?? user.lastName
+    };
+    
+    // Update password if provided
+    if (userData.password) {
+      updatedUser.passwordHash = await hash(userData.password, 10);
+    }
+    
+    this.users[id] = updatedUser;
+    return updatedUser;
+  }
+  
+  async verifyUser(email: string): Promise<boolean> {
+    const user = await this.getUserByEmail(email);
+    
+    if (!user) {
+      return false;
+    }
+    
+    user.isVerified = true;
+    return true;
+  }
+  
+  async validatePassword(email: string, password: string): Promise<User | null> {
+    const user = await this.getUserByEmail(email);
+    
+    if (!user) {
+      return null;
+    }
+    
+    const isValid = await compare(password, user.passwordHash);
+    
+    if (!isValid) {
+      return null;
+    }
+    
+    return user;
   }
 }
 

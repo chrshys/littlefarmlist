@@ -1,4 +1,4 @@
-import { pgTable, text, serial, jsonb, timestamp, doublePrecision, integer, uniqueIndex, primaryKey } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, jsonb, timestamp, doublePrecision, integer, uniqueIndex, primaryKey, varchar, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
@@ -113,3 +113,55 @@ export type CreateCategory = z.infer<typeof createCategorySchema>;
 export type Category = typeof categories.$inferSelect;
 
 export type ListingCategory = typeof listingCategories.$inferSelect;
+
+// Users table
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  email: varchar("email", { length: 255 }).notNull(),
+  username: varchar("username", { length: 50 }).notNull(),
+  passwordHash: varchar("password_hash", { length: 255 }).notNull(),
+  firstName: varchar("first_name", { length: 100 }),
+  lastName: varchar("last_name", { length: 100 }),
+  isVerified: boolean("is_verified").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+}, (table) => {
+  return {
+    emailIdx: uniqueIndex("users_email_idx").on(table.email),
+    usernameIdx: uniqueIndex("users_username_idx").on(table.username)
+  };
+});
+
+export const usersRelations = relations(users, ({ many }) => ({
+  listings: many(listings)
+}));
+
+// Update listings relations to include user
+export const listingsToUserRelation = relations(listings, ({ one }) => ({
+  user: one(users, {
+    fields: [listings.id],
+    references: [users.id]
+  })
+}));
+
+// User schemas
+export const insertUserSchema = createInsertSchema(users).omit({
+  id: true,
+  createdAt: true,
+  passwordHash: true,
+  isVerified: true
+}).extend({
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  confirmPassword: z.string().min(8, "Password must be at least 8 characters")
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"]
+});
+
+export const loginUserSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(1, "Password is required")
+});
+
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type User = typeof users.$inferSelect;
+export type LoginUser = z.infer<typeof loginUserSchema>;
