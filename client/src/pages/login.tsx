@@ -49,8 +49,8 @@ export default function Login() {
         variant: "default",
       });
 
-      // Redirect to homepage after successful login
-      navigate("/");
+      // Redirect to dashboard after successful login
+      navigate("/dashboard");
     } catch (error: any) {
       toast({
         title: "Login Failed",

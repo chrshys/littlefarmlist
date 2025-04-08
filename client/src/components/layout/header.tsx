@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Sprout, Menu, LogOut, User, LayoutDashboard } from "lucide-react";
+import { Sprout, Menu, LogOut, User, LayoutDashboard, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -63,11 +63,18 @@ export function Header() {
             </span>
           </Link>
           {isAuthenticated && (
-            <Link href="/dashboard">
-              <span className="text-sm font-medium text-neutral-700 hover:text-primary transition-colors">
-                Dashboard
-              </span>
-            </Link>
+            <>
+              <Link href="/dashboard">
+                <span className="text-sm font-medium text-neutral-700 hover:text-primary transition-colors">
+                  Dashboard
+                </span>
+              </Link>
+              <Link href="/create">
+                <span className="text-sm font-medium text-neutral-700 hover:text-primary transition-colors">
+                  Create Listing
+                </span>
+              </Link>
+            </>
           )}
         </nav>
 
@@ -96,6 +103,11 @@ export function Header() {
                   <User className="mr-2 h-4 w-4" />
                   <span>My Listings</span>
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/create")}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  <span>Create Listing</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Log out</span>
@@ -154,11 +166,18 @@ export function Header() {
               </span>
             </Link>
             {isAuthenticated && (
-              <Link href="/dashboard">
-                <span className="text-sm font-medium text-neutral-700 hover:text-primary transition-colors block py-1">
-                  Dashboard
-                </span>
-              </Link>
+              <>
+                <Link href="/dashboard">
+                  <span className="text-sm font-medium text-neutral-700 hover:text-primary transition-colors block py-1">
+                    Dashboard
+                  </span>
+                </Link>
+                <Link href="/create">
+                  <span className="text-sm font-medium text-neutral-700 hover:text-primary transition-colors block py-1">
+                    Create Listing
+                  </span>
+                </Link>
+              </>
             )}
             {!isAuthenticated && (
               <Link href="/login">
