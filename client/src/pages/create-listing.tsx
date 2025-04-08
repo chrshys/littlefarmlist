@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,8 +11,9 @@ import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
-import { CreateListingForm, Item } from "@/types/listing";
-import { createListing, getRandomNiagaraAddress, niagaraAddresses, imageToBase64 } from "@/lib/listings";
+import { useQuery } from "@tanstack/react-query";
+import { CreateListingForm, Listing, Item } from "@/types/listing";
+import { createListing, updateListing, getRandomNiagaraAddress, niagaraAddresses, imageToBase64 } from "@/lib/listings";
 import { Badge } from "@/components/ui/badge";
 
 // Validation schema based on our shared schema
@@ -39,13 +40,28 @@ const createListingSchema = z.object({
 });
 
 export default function CreateListing() {
-  const [_, navigate] = useLocation();
+  const [location, navigate] = useLocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const [addressSuggestion, setAddressSuggestion] = useState("");
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  
+  // Parse URL params for edit mode
+  const params = new URLSearchParams(location.split('?')[1]);
+  const editId = params.get('edit') ? parseInt(params.get('edit') || '0') : null;
+  const editToken = params.get('token') || null;
+  const isEditMode = Boolean(editId && editToken);
+  
+  // Fetch existing listing data in edit mode
+  const { 
+    data: existingListing,
+    isLoading: isLoadingListing
+  } = useQuery<Listing>({
+    queryKey: [`/api/listings/${editId}`],
+    enabled: isEditMode && !!editId
+  });
   
   // Available categories
   const categories = [
@@ -67,6 +83,7 @@ export default function CreateListing() {
     register,
     handleSubmit,
     control,
+    reset,
     formState: { errors },
   } = useForm<CreateListingForm>({
     resolver: zodResolver(createListingSchema),
@@ -79,6 +96,36 @@ export default function CreateListing() {
       address: "",
     }
   });
+  
+  // Initialize form with existing data when in edit mode
+  useEffect(() => {
+    if (isEditMode && existingListing) {
+      // Update the form with the existing listing data
+      reset({
+        title: existingListing.title,
+        description: existingListing.description || "",
+        items: existingListing.items.length > 0 
+          ? existingListing.items.map(item => ({ 
+              name: item.name, 
+              price: item.price 
+            })) 
+          : [{ name: "", price: 0 }],
+        address: existingListing.address,
+        pickupInstructions: existingListing.pickupInstructions,
+        paymentInfo: existingListing.paymentInfo || "",
+      });
+      
+      // Set preview image if exists
+      if (existingListing.imageUrl) {
+        setPreviewImage(existingListing.imageUrl);
+      }
+      
+      // Set categories if available
+      if (existingListing.categories && existingListing.categories.length > 0) {
+        setSelectedCategories(existingListing.categories);
+      }
+    }
+  }, [existingListing, isEditMode, reset]);
 
   // Item field array setup
   const { fields, append, remove } = useFieldArray({
@@ -187,13 +234,29 @@ export default function CreateListing() {
       
       console.log("Final form data to submit:", data);
       
-      const listing = await createListing(data);
-      console.log("Listing created successfully:", listing);
-      navigate(`/confirmation/${listing.id}`);
+      let listing: Listing;
+      
+      if (isEditMode && editId && editToken) {
+        // Update existing listing
+        listing = await updateListing(editId, editToken, data);
+        console.log("Listing updated successfully:", listing);
+        
+        // Redirect to My Listings page after update
+        toast({
+          title: "Listing updated",
+          description: "Your listing has been updated successfully",
+        });
+        navigate("/my-listings");
+      } else {
+        // Create new listing
+        listing = await createListing(data);
+        console.log("Listing created successfully:", listing);
+        navigate(`/confirmation/${listing.id}`);
+      }
     } catch (error) {
-      console.error("Failed to create listing", error);
+      console.error(`Failed to ${isEditMode ? 'update' : 'create'} listing`, error);
       toast({
-        title: "Failed to create listing",
+        title: `Failed to ${isEditMode ? 'update' : 'create'} listing`,
         description: error instanceof Error ? error.message : "An error occurred",
         variant: "destructive"
       });
@@ -213,7 +276,9 @@ export default function CreateListing() {
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h2 className="text-xl font-medium text-neutral-800">Create a listing</h2>
+        <h2 className="text-xl font-medium text-neutral-800">
+          {isEditMode ? 'Edit listing' : 'Create a listing'}
+        </h2>
       </div>
       
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -474,7 +539,10 @@ export default function CreateListing() {
           className="w-full"
           disabled={isSubmitting}
         >
-          {isSubmitting ? "Creating..." : "Create listing"}
+          {isSubmitting 
+            ? (isEditMode ? "Updating..." : "Creating...") 
+            : (isEditMode ? "Update listing" : "Create listing")
+          }
         </Button>
       </form>
     </div>

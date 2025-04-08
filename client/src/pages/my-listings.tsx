@@ -40,7 +40,7 @@ export default function MyListings() {
   
   // Handle edit
   const handleEdit = (id: number, editToken: string) => {
-    navigate(`/l/${id}?edit=${editToken}`);
+    navigate(`/create?edit=${id}&token=${editToken}`);
   };
   
   // Handle share
@@ -254,9 +254,9 @@ export default function MyListings() {
                     variant="outline"
                     size="sm"
                     className="text-primary hover:text-primary/90 hover:bg-primary/5"
-                    onClick={() => navigate(`/l/${listing.id}`)}
+                    onClick={() => handleEdit(listing.id, listing.editToken)}
                   >
-                    View details
+                    Edit
                   </Button>
                 </div>
               </CardContent>
