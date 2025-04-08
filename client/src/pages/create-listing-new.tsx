@@ -91,24 +91,11 @@ export default function CreateListing() {
     }
   });
   
-  // Get editToken from localStorage if available
-  const [editToken, setEditToken] = useState<string | null>(null);
-  
-  useEffect(() => {
-    if (isEditMode && editId) {
-      const token = localStorage.getItem(`listing_token_${editId}`);
-      if (token) {
-        setEditToken(token);
-        console.log('Found edit token in localStorage:', token);
-      }
-    }
-  }, [isEditMode, editId]);
-  
-  // Fetch existing listing data in edit mode
+  // Fetch existing listing data in edit mode (using account authentication)
   const { data: existingListing } = useQuery<Listing>({
-    queryKey: ['listing', editId, editToken],
+    queryKey: [`/api/listings/${editId}`],
     queryFn: () => apiRequest<Listing>({ 
-      url: `/api/listings/${editId}?token=${editToken || ''}`,
+      url: `/api/listings/${editId}`,
       method: 'GET',
     }),
     enabled: isEditMode && !!editId
@@ -235,8 +222,7 @@ export default function CreateListing() {
       let listing: Listing;
       
       if (isEditMode && editId) {
-        // When updating while logged in, we don't need to pass the editToken
-        // The server will check if we own the listing instead
+        // Update using account authentication
         listing = await updateListing(editId, data);
         console.log("Listing updated successfully:", listing);
         
