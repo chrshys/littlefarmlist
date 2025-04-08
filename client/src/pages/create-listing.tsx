@@ -57,15 +57,28 @@ export default function CreateListing() {
   // Fetch existing listing data in edit mode
   const { 
     data: existingListing,
-    isLoading: isLoadingListing
+    isLoading: isLoadingListing,
+    error: listingError
   } = useQuery<Listing>({
-    queryKey: ['/api/listings', editId],
+    queryKey: [`/api/listings/${editId}`],
     queryFn: () => apiRequest({ 
       url: `/api/listings/${editId}`,
       method: 'GET'
     }),
     enabled: isEditMode && !!editId
   });
+  
+  // Debug the query status
+  useEffect(() => {
+    if (isEditMode) {
+      console.log('Listing query status:', { 
+        isLoadingListing,
+        hasData: !!existingListing,
+        error: listingError,
+        queryKey: `/api/listings/${editId}`
+      });
+    }
+  }, [isLoadingListing, existingListing, listingError, isEditMode, editId]);
   
   // Debug log to check what's happening
   useEffect(() => {
