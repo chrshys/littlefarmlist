@@ -1,21 +1,20 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
-import { Header } from "@/components/layout/header";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Trash2, MapPin, Image, X, Tag } from "lucide-react";
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
-import { CreateListingForm, Listing, Item } from "@/types/listing";
+import { CreateListingForm, Listing } from "@/types/listing";
 import { createListing, updateListing, getRandomNiagaraAddress, niagaraAddresses, imageToBase64 } from "@/lib/listings";
 import { apiRequest } from "@/lib/queryClient";
-import { Badge } from "@/components/ui/badge";
 
 // Validation schema based on our shared schema
 const itemSchema = z.object({
@@ -54,6 +53,8 @@ export default function CreateListing() {
   const editId = params.get('edit') ? parseInt(params.get('edit') || '0') : null;
   const isEditMode = Boolean(editId);
   
+  console.log('Mode:', isEditMode ? 'Edit' : 'Create', editId);
+  
   // Available categories
   const categories = [
     "Vegetables", 
@@ -69,33 +70,13 @@ export default function CreateListing() {
     "Flowers"
   ];
   
-  // Fetch existing listing data in edit mode
-  const { 
-    data: existingListing,
-    isLoading: isLoadingListing,
-  } = useQuery<Listing>({
-    queryKey: [`/api/listings/${editId}`],
-    queryFn: () => apiRequest({ 
-      url: `/api/listings/${editId}`,
-      method: 'GET'
-    }),
-    enabled: isEditMode && !!editId
-  });
-  
-  // Debug log to check what's happening
-  useEffect(() => {
-    if (isEditMode) {
-      console.log('Edit mode detected:', { editId });
-      console.log('Existing listing:', existingListing);
-    }
-  }, [editId, existingListing, isEditMode]);
-
   // Form setup
   const {
     register,
     handleSubmit,
     control,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<CreateListingForm>({
     resolver: zodResolver(createListingSchema),
@@ -110,14 +91,26 @@ export default function CreateListing() {
     }
   });
   
-  // Initialize form with existing data when in edit mode
+  // Fetch existing listing data in edit mode
+  const { data: existingListing } = useQuery<Listing>({
+    queryKey: ['listing', editId],
+    queryFn: () => apiRequest<Listing>({ 
+      url: `/api/listings/${editId}`,
+      method: 'GET'
+    }),
+    enabled: isEditMode && !!editId
+  });
+  
+  // Handle the data once it's loaded
   useEffect(() => {
-    if (isEditMode && existingListing) {
-      // Update the form with the existing listing data
+    if (existingListing) {
+      console.log('Successfully fetched listing data:', existingListing);
+      
+      // Populate form with existing data
       reset({
         title: existingListing.title,
         description: existingListing.description || "",
-        items: existingListing.items.length > 0 
+        items: existingListing.items && existingListing.items.length > 0 
           ? existingListing.items.map(item => ({ 
               name: item.name, 
               price: item.price 
@@ -132,17 +125,6 @@ export default function CreateListing() {
       // Set preview image if exists
       if (existingListing.imageUrl) {
         setPreviewImage(existingListing.imageUrl);
-        
-        // Also need to update the hidden input field
-        setTimeout(() => {
-          const imageUrlField = document.getElementById('imageUrl') as HTMLInputElement;
-          if (imageUrlField) {
-            imageUrlField.value = existingListing.imageUrl || '';
-            // Trigger an input event to ensure react-hook-form updates
-            const event = new Event('input', { bubbles: true });
-            imageUrlField.dispatchEvent(event);
-          }
-        }, 0);
       }
       
       // Set categories if available
@@ -150,8 +132,8 @@ export default function CreateListing() {
         setSelectedCategories(existingListing.categories);
       }
     }
-  }, [existingListing, isEditMode, reset]);
-
+  }, [existingListing, reset]);
+  
   // Item field array setup
   const { fields, append, remove } = useFieldArray({
     control,
@@ -164,14 +146,8 @@ export default function CreateListing() {
     // Set the suggestion in state so we can match it when submitting
     setAddressSuggestion(address);
     
-    // Update the form with the address and coordinates
-    const addressField = document.getElementById('address') as HTMLInputElement;
-    if (addressField) {
-      addressField.value = address;
-      // Trigger an input event to ensure react-hook-form updates
-      const event = new Event('input', { bubbles: true });
-      addressField.dispatchEvent(event);
-    }
+    // Update the form value
+    setValue("address", address, { shouldValidate: true });
   };
   
   // Handle image upload
@@ -181,15 +157,7 @@ export default function CreateListing() {
       try {
         const base64Image = await imageToBase64(file);
         setPreviewImage(base64Image);
-        
-        // Set the base64 string to the hidden input for form submission
-        const imageUrlField = document.getElementById('imageUrl') as HTMLInputElement;
-        if (imageUrlField) {
-          imageUrlField.value = base64Image;
-          // Trigger an input event to ensure react-hook-form updates
-          const event = new Event('input', { bubbles: true });
-          imageUrlField.dispatchEvent(event);
-        }
+        setValue("imageUrl", base64Image, { shouldValidate: true });
       } catch (error) {
         console.error('Error converting image to base64:', error);
         toast({
@@ -207,15 +175,7 @@ export default function CreateListing() {
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
-    
-    // Clear the hidden input
-    const imageUrlField = document.getElementById('imageUrl') as HTMLInputElement;
-    if (imageUrlField) {
-      imageUrlField.value = '';
-      // Trigger an input event to ensure react-hook-form updates
-      const event = new Event('input', { bubbles: true });
-      imageUrlField.dispatchEvent(event);
-    }
+    setValue("imageUrl", "", { shouldValidate: true });
   };
   
   // Handle category selection
@@ -525,18 +485,18 @@ export default function CreateListing() {
             <p className="text-sm text-red-500 mt-1">{errors.address.message}</p>
           )}
           <p className="text-xs text-neutral-500 mt-1">
-            This address will be shown on the map to help buyers find your farm
+            Enter your farm location for customers to find you
           </p>
         </div>
         
         {/* Pickup Instructions */}
         <div>
           <Label htmlFor="pickupInstructions" className="text-sm font-medium text-neutral-700 mb-2 block">
-            Pickup instructions
+            Pickup Instructions
           </Label>
           <Textarea
             id="pickupInstructions"
-            placeholder="e.g., Available at the end of my driveway from 2-6pm"
+            placeholder="e.g., Park in the driveway and knock on the red door"
             className="resize-none"
             {...register("pickupInstructions")}
           />
@@ -545,22 +505,22 @@ export default function CreateListing() {
           )}
         </div>
         
-        {/* Payment Info */}
+        {/* Payment Information */}
         <div>
           <Label htmlFor="paymentInfo" className="text-sm font-medium text-neutral-700 mb-2 block">
-            Payment info (optional)
+            Payment Information (optional)
           </Label>
           <Textarea
             id="paymentInfo"
-            placeholder="e.g., Cash or e-transfer to..."
+            placeholder="e.g., Cash or e-transfer accepted"
             className="resize-none"
             {...register("paymentInfo")}
           />
         </div>
         
         {/* Submit Button */}
-        <Button
-          type="submit"
+        <Button 
+          type="submit" 
           className="w-full"
           disabled={isSubmitting}
         >
