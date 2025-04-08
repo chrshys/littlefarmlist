@@ -2,7 +2,7 @@ import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
-import { createListingSchema, createCategorySchema, insertUserSchema, loginUserSchema } from "@shared/schema";
+import { createListingSchema, createCategorySchema, insertUserSchema, loginUserSchema, toggleFavoriteSchema } from "@shared/schema";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import passport from "./auth";
@@ -480,6 +480,104 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error removing category from listing:", error);
       res.status(500).json({ message: "Failed to remove category from listing" });
+    }
+  });
+
+  // FAVORITES ENDPOINTS
+  
+  // Get user favorites
+  router.get("/favorites", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+      
+      const favorites = await storage.getUserFavorites(userId);
+      res.json(favorites);
+    } catch (error) {
+      console.error("Error fetching user favorites:", error);
+      res.status(500).json({ message: "Failed to fetch favorites" });
+    }
+  });
+  
+  // Add a favorite
+  router.post("/favorites", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+      
+      const { listingId } = toggleFavoriteSchema.parse(req.body);
+      
+      // Check if listing exists
+      const listing = await storage.getListing(listingId);
+      if (!listing) {
+        return res.status(404).json({ message: "Listing not found" });
+      }
+      
+      const favorite = await storage.addFavorite(userId, listingId);
+      res.status(201).json(favorite);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        res.status(400).json({ message: validationError.message });
+      } else {
+        console.error("Error adding favorite:", error);
+        res.status(500).json({ message: "Failed to add favorite" });
+      }
+    }
+  });
+  
+  // Remove a favorite
+  router.delete("/favorites/:listingId", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const listingId = parseInt(req.params.listingId, 10);
+      
+      if (isNaN(listingId)) {
+        return res.status(400).json({ message: "Invalid listing ID" });
+      }
+      
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+      
+      const success = await storage.removeFavorite(userId, listingId);
+      
+      if (success) {
+        res.status(204).end();
+      } else {
+        res.status(404).json({ message: "Favorite not found" });
+      }
+    } catch (error) {
+      console.error("Error removing favorite:", error);
+      res.status(500).json({ message: "Failed to remove favorite" });
+    }
+  });
+  
+  // Check if a listing is favorited by the current user
+  router.get("/favorites/:listingId", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const listingId = parseInt(req.params.listingId, 10);
+      
+      if (isNaN(listingId)) {
+        return res.status(400).json({ message: "Invalid listing ID" });
+      }
+      
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+      
+      const isFavorite = await storage.isFavorite(userId, listingId);
+      res.json({ isFavorite });
+    } catch (error) {
+      console.error("Error checking favorite status:", error);
+      res.status(500).json({ message: "Failed to check favorite status" });
     }
   });
 

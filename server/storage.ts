@@ -6,6 +6,7 @@ import {
   categories,
   listingCategories,
   users,
+  favorites,
   type Listing,
   type InsertListing,
   type CreateListing, 
@@ -17,7 +18,8 @@ import {
   type ListingCategory,
   type InsertUser,
   type User,
-  type LoginUser
+  type LoginUser,
+  type Favorite
 } from "@shared/schema";
 import { db } from "./db";
 
@@ -53,6 +55,12 @@ export interface IStorage {
   updateUser(id: number, userData: Partial<InsertUser>): Promise<User | undefined>;
   verifyUser(email: string): Promise<boolean>;
   validatePassword(email: string, password: string): Promise<User | null>;
+  
+  // Favorites methods
+  addFavorite(userId: number, listingId: number): Promise<Favorite>;
+  removeFavorite(userId: number, listingId: number): Promise<boolean>;
+  getUserFavorites(userId: number): Promise<Listing[]>;
+  isFavorite(userId: number, listingId: number): Promise<boolean>;
 }
 
 // PostgreSQL database storage implementation
@@ -688,6 +696,83 @@ export class DbStorage implements IStorage {
     
     return user;
   }
+  
+  // Favorites methods
+  async addFavorite(userId: number, listingId: number): Promise<Favorite> {
+    // Check if the favorite already exists
+    const existingResult = await db.execute(sql`
+      SELECT * FROM favorites
+      WHERE user_id = ${userId} AND listing_id = ${listingId}
+    `);
+    
+    if (existingResult.rows.length > 0) {
+      const row = existingResult.rows[0];
+      return {
+        id: row.id,
+        userId: row.user_id,
+        listingId: row.listing_id,
+        createdAt: row.created_at
+      } as Favorite;
+    }
+    
+    // If not, create new favorite
+    const result = await db.execute(sql`
+      INSERT INTO favorites (user_id, listing_id)
+      VALUES (${userId}, ${listingId})
+      RETURNING *
+    `);
+    
+    const row = result.rows[0];
+    return {
+      id: row.id,
+      userId: row.user_id,
+      listingId: row.listing_id,
+      createdAt: row.created_at
+    } as Favorite;
+  }
+  
+  async removeFavorite(userId: number, listingId: number): Promise<boolean> {
+    const result = await db.execute(sql`
+      DELETE FROM favorites
+      WHERE user_id = ${userId} AND listing_id = ${listingId}
+      RETURNING id
+    `);
+    
+    return result.rows.length > 0;
+  }
+  
+  async getUserFavorites(userId: number): Promise<Listing[]> {
+    const result = await db.execute(sql`
+      SELECT l.* FROM listings l
+      JOIN favorites f ON l.id = f.listing_id
+      WHERE f.user_id = ${userId}
+      ORDER BY f.created_at DESC
+    `);
+    
+    return result.rows.map(row => ({
+      id: row.id,
+      title: row.title,
+      description: row.description,
+      items: row.items,
+      categories: row.categories,
+      pickupInstructions: row.pickup_instructions,
+      paymentInfo: row.payment_info,
+      address: row.address,
+      coordinates: row.coordinates,
+      imageUrl: row.image_url,
+      createdAt: row.created_at,
+      editToken: row.edit_token
+    })) as Listing[];
+  }
+  
+  async isFavorite(userId: number, listingId: number): Promise<boolean> {
+    const result = await db.execute(sql`
+      SELECT * FROM favorites
+      WHERE user_id = ${userId} AND listing_id = ${listingId}
+    `);
+    
+    return result.rows.length > 0;
+  }
 }
 
 // In-memory storage implementation
@@ -695,19 +780,23 @@ export class MemStorage implements IStorage {
   private listings: Record<number, Listing>;
   private categories: Record<number, Category>;
   private users: Record<number, User>;
+  private favorites: Record<number, Favorite>;
   private listingCategories: Record<string, { listingId: number, categoryId: number }>;
   private listingCurrentId: number;
   private categoryCurrentId: number;
   private userCurrentId: number;
+  private favoriteCurrentId: number;
 
   constructor() {
     this.listings = {};
     this.categories = {};
     this.users = {};
+    this.favorites = {};
     this.listingCategories = {};
     this.listingCurrentId = 1;
     this.categoryCurrentId = 1;
     this.userCurrentId = 1;
+    this.favoriteCurrentId = 1;
   }
 
   async createListing(listingData: CreateListing): Promise<Listing> {
@@ -1002,6 +1091,75 @@ export class MemStorage implements IStorage {
     }
     
     return user;
+  }
+  
+  // Favorites methods
+  async addFavorite(userId: number, listingId: number): Promise<Favorite> {
+    // Check if the user and listing exist
+    if (!this.users[userId] || !this.listings[listingId]) {
+      throw new Error("User or listing not found");
+    }
+    
+    // Check if favorite already exists
+    const existing = Object.values(this.favorites).find(
+      fav => fav.userId === userId && fav.listingId === listingId
+    );
+    
+    if (existing) {
+      return existing;
+    }
+    
+    // Create a new favorite
+    const id = this.favoriteCurrentId++;
+    const createdAt = new Date();
+    
+    const favorite: Favorite = {
+      id,
+      userId,
+      listingId,
+      createdAt
+    };
+    
+    this.favorites[id] = favorite;
+    return favorite;
+  }
+  
+  async removeFavorite(userId: number, listingId: number): Promise<boolean> {
+    const favoriteId = Object.values(this.favorites).find(
+      fav => fav.userId === userId && fav.listingId === listingId
+    )?.id;
+    
+    if (favoriteId !== undefined) {
+      delete this.favorites[favoriteId];
+      return true;
+    }
+    
+    return false;
+  }
+  
+  async getUserFavorites(userId: number): Promise<Listing[]> {
+    // Find all favorites for this user
+    const favoritedListingIds = Object.values(this.favorites)
+      .filter(fav => fav.userId === userId)
+      .map(fav => fav.listingId);
+    
+    // Get the actual listing objects
+    const listings: Listing[] = [];
+    favoritedListingIds.forEach(listingId => {
+      const listing = this.listings[listingId];
+      if (listing) {
+        listings.push(listing);
+      }
+    });
+    
+    // Sort by creation date, newest first
+    return listings.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+  
+  async isFavorite(userId: number, listingId: number): Promise<boolean> {
+    return Object.values(this.favorites).some(
+      fav => fav.userId === userId && fav.listingId === listingId
+    );
   }
 }
 

@@ -14,6 +14,7 @@ import MapView from "@/pages/map-view";
 import Explore from "@/pages/explore";
 import Login from "@/pages/login";
 import Signup from "@/pages/signup";
+import Dashboard from "@/pages/dashboard";
 
 function Router() {
   return (
@@ -29,6 +30,7 @@ function Router() {
         <Route path="/explore" component={Explore} />
         <Route path="/login" component={Login} />
         <Route path="/signup" component={Signup} />
+        <Route path="/dashboard" component={Dashboard} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

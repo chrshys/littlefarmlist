@@ -131,16 +131,54 @@ export const users = pgTable("users", {
   };
 });
 
-export const usersRelations = relations(users, ({ many }) => ({
-  listings: many(listings)
+// Favorites table - junction table for users and listings
+export const favorites = pgTable("favorites", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  listingId: integer("listing_id").notNull().references(() => listings.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+}, (table) => {
+  return {
+    userListingIdx: uniqueIndex("favorites_user_listing_idx").on(table.userId, table.listingId)
+  };
+});
+
+export const favoritesRelations = relations(favorites, ({ one }) => ({
+  user: one(users, {
+    fields: [favorites.userId],
+    references: [users.id]
+  }),
+  listing: one(listings, {
+    fields: [favorites.listingId],
+    references: [listings.id]
+  })
 }));
 
-// Update listings relations to include user
-export const listingsToUserRelation = relations(listings, ({ one }) => ({
+// Favorites schemas
+export const insertFavoriteSchema = createInsertSchema(favorites).omit({
+  id: true,
+  createdAt: true
+});
+
+export const toggleFavoriteSchema = z.object({
+  listingId: z.number()
+});
+
+export type InsertFavorite = z.infer<typeof insertFavoriteSchema>;
+export type ToggleFavorite = z.infer<typeof toggleFavoriteSchema>;
+
+export const usersRelations = relations(users, ({ many }) => ({
+  listings: many(listings),
+  favorites: many(favorites)
+}));
+
+// Update listings relations to include user and favorites
+export const listingsToUserRelation = relations(listings, ({ one, many }) => ({
   user: one(users, {
     fields: [listings.id],
     references: [users.id]
-  })
+  }),
+  favoritedBy: many(favorites)
 }));
 
 // User schemas
@@ -165,3 +203,4 @@ export const loginUserSchema = z.object({
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type LoginUser = z.infer<typeof loginUserSchema>;
+export type Favorite = typeof favorites.$inferSelect;

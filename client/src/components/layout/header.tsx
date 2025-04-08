@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Sprout, Menu, LogOut, User } from "lucide-react";
+import { Sprout, Menu, LogOut, User, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -62,6 +62,13 @@ export function Header() {
               My Listings
             </span>
           </Link>
+          {isAuthenticated && (
+            <Link href="/dashboard">
+              <span className="text-sm font-medium text-neutral-700 hover:text-primary transition-colors">
+                Dashboard
+              </span>
+            </Link>
+          )}
         </nav>
 
         {/* Auth Buttons */}
@@ -81,6 +88,10 @@ export function Header() {
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate("/dashboard")}>
+                  <LayoutDashboard className="mr-2 h-4 w-4" />
+                  <span>Dashboard</span>
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate("/my-listings")}>
                   <User className="mr-2 h-4 w-4" />
                   <span>My Listings</span>
@@ -142,6 +153,13 @@ export function Header() {
                 My Listings
               </span>
             </Link>
+            {isAuthenticated && (
+              <Link href="/dashboard">
+                <span className="text-sm font-medium text-neutral-700 hover:text-primary transition-colors block py-1">
+                  Dashboard
+                </span>
+              </Link>
+            )}
             {!isAuthenticated && (
               <Link href="/login">
                 <span className="text-sm font-medium text-neutral-700 hover:text-primary transition-colors block py-1">
