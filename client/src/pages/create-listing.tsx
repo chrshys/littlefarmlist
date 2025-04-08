@@ -152,15 +152,6 @@ export default function CreateListing() {
       const newCategories = prev.includes(category)
         ? prev.filter(c => c !== category) // Remove if already selected
         : [...prev, category]; // Add if not selected
-        
-      // Update hidden input for form submission
-      const categoriesField = document.getElementById('categories') as HTMLInputElement;
-      if (categoriesField) {
-        categoriesField.value = JSON.stringify(newCategories);
-        // Trigger an input event to ensure react-hook-form updates
-        const event = new Event('input', { bubbles: true });
-        categoriesField.dispatchEvent(event);
-      }
       
       return newCategories;
     });
@@ -395,12 +386,7 @@ export default function CreateListing() {
             Categories <Tag className="h-4 w-4 ml-1 text-primary-500" />
           </Label>
           
-          {/* Hidden input for categories data */}
-          <input 
-            type="hidden" 
-            id="categories" 
-            {...register("categories")} 
-          />
+          {/* Categories are handled via the selectedCategories state */}
           
           <div className="flex flex-wrap gap-2 mt-2">
             {categories.map((category) => (
