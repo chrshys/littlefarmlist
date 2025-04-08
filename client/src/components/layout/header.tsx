@@ -63,18 +63,11 @@ export function Header() {
             </span>
           </Link>
           {isAuthenticated && (
-            <>
-              <Link href="/dashboard">
-                <span className="text-sm font-medium text-neutral-700 hover:text-primary transition-colors">
-                  Dashboard
-                </span>
-              </Link>
-              <Link href="/create">
-                <span className="text-sm font-medium text-neutral-700 hover:text-primary transition-colors">
-                  Create Listing
-                </span>
-              </Link>
-            </>
+            <Link href="/dashboard">
+              <span className="text-sm font-medium text-neutral-700 hover:text-primary transition-colors">
+                Dashboard
+              </span>
+            </Link>
           )}
         </nav>
 
@@ -102,10 +95,6 @@ export function Header() {
                 <DropdownMenuItem onClick={() => navigate("/my-listings")}>
                   <User className="mr-2 h-4 w-4" />
                   <span>My Listings</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate("/create")}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  <span>Create Listing</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
@@ -166,18 +155,11 @@ export function Header() {
               </span>
             </Link>
             {isAuthenticated && (
-              <>
-                <Link href="/dashboard">
-                  <span className="text-sm font-medium text-neutral-700 hover:text-primary transition-colors block py-1">
-                    Dashboard
-                  </span>
-                </Link>
-                <Link href="/create">
-                  <span className="text-sm font-medium text-neutral-700 hover:text-primary transition-colors block py-1">
-                    Create Listing
-                  </span>
-                </Link>
-              </>
+              <Link href="/dashboard">
+                <span className="text-sm font-medium text-neutral-700 hover:text-primary transition-colors block py-1">
+                  Dashboard
+                </span>
+              </Link>
             )}
             {!isAuthenticated && (
               <Link href="/login">
