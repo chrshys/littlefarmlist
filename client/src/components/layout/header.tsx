@@ -59,7 +59,7 @@ export function Header() {
           </Link>
           <Link href="/map">
             <span className={`text-sm font-medium ${location === "/map" ? "text-primary" : "text-neutral-700 hover:text-primary"} transition-colors`}>
-              Map View
+              Map
             </span>
           </Link>
           <Link href="/my-listings">
@@ -156,7 +156,7 @@ export function Header() {
             </Link>
             <Link href="/map">
               <span className={`text-sm font-medium ${location === "/map" ? "text-primary" : "text-neutral-700 hover:text-primary"} transition-colors block py-1`}>
-                Map View
+                Map
               </span>
             </Link>
             <Link href="/my-listings">
