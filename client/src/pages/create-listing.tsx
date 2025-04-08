@@ -52,7 +52,6 @@ export default function CreateListing() {
   // Parse URL params for edit mode
   const params = new URLSearchParams(location.split('?')[1]);
   const editId = params.get('edit') ? parseInt(params.get('edit') || '0') : null;
-  const editToken = null; // No longer needed but kept to avoid refactoring references to it
   const isEditMode = Boolean(editId);
   
   // Fetch existing listing data in edit mode
@@ -71,10 +70,10 @@ export default function CreateListing() {
   // Debug log to check what's happening
   useEffect(() => {
     if (isEditMode) {
-      console.log('Edit mode detected:', { editId, editToken });
+      console.log('Edit mode detected:', { editId });
       console.log('Existing listing:', existingListing);
     }
-  }, [editId, editToken, existingListing, isEditMode]);
+  }, [editId, existingListing, isEditMode]);
   
   // Available categories
   const categories = [

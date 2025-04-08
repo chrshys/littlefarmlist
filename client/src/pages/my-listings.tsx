@@ -40,7 +40,7 @@ export default function MyListings() {
   
   // Handle edit
   const handleEdit = (id: number, editToken: string) => {
-    navigate(`/create?edit=${id}&token=${editToken}`);
+    navigate(`/create?edit=${id}`);
   };
   
   // Handle share
