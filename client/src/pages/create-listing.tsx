@@ -169,6 +169,8 @@ export default function CreateListing() {
   const onSubmit = async (data: CreateListingForm) => {
     setIsSubmitting(true);
     try {
+      console.log("Form submission started with data:", data);
+      
       // Add coordinates if we have an address suggestion from Niagara region
       if (addressSuggestion && data.address === addressSuggestion) {
         // Find the matching address in our Niagara addresses array
@@ -189,9 +191,13 @@ export default function CreateListing() {
       // Add the selected categories
       if (selectedCategories.length > 0) {
         data.categories = selectedCategories;
+        console.log("Added categories to form data:", selectedCategories);
       }
       
+      console.log("Final form data to submit:", data);
+      
       const listing = await createListing(data);
+      console.log("Listing created successfully:", listing);
       navigate(`/confirmation/${listing.id}`);
     } catch (error) {
       console.error("Failed to create listing", error);

@@ -39,6 +39,7 @@ export class MemStorage implements IStorage {
       description: listingData.description || null,
       // Ensure items is properly typed
       items: listingData.items as Item[],
+      categories: Array.isArray(listingData.categories) ? listingData.categories : [],
       pickupInstructions: listingData.pickupInstructions,
       paymentInfo: listingData.paymentInfo || null,
       address: listingData.address,
@@ -79,6 +80,7 @@ export class MemStorage implements IStorage {
       title: listingUpdate.title ?? listing.title,
       description: listingUpdate.description ?? listing.description,
       items: (listingUpdate.items as Item[] | undefined) ?? listing.items,
+      categories: Array.isArray(listingUpdate.categories) ? listingUpdate.categories : (listing.categories || []),
       pickupInstructions: listingUpdate.pickupInstructions ?? listing.pickupInstructions,
       paymentInfo: listingUpdate.paymentInfo ?? listing.paymentInfo,
       address: listingUpdate.address ?? listing.address,
