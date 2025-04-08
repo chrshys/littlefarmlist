@@ -37,8 +37,7 @@ export default function Home() {
           Discover local products<br /> from your neighbours
         </h1>
         <p className="text-lg text-neutral-600 max-w-2xl mx-auto mb-8">
-          Find and purchase locally grown produce and handmade goods 
-          directly from producers in your community
+          Discover locally grown and handmade goods in your community
         </p>
         
         {/* Search Bar */}
@@ -84,7 +83,7 @@ export default function Home() {
         <div className="flex items-center justify-between">
           {/* Scrollable categories container */}
           <div className="flex-1 overflow-x-auto hide-scrollbar">
-            <div className="flex gap-2 pb-2">
+            <div className="flex gap-2">
               {categories.map((category, index) => (
                 <Button 
                   key={index}
@@ -107,7 +106,6 @@ export default function Home() {
               onClick={() => {/* Would open filter modal */}}
             >
               <Filter className="h-4 w-4" />
-              Filters
             </Button>
           </div>
         </div>
