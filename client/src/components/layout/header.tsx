@@ -36,35 +36,40 @@ export function Header() {
         <Link href="/">
           <div className="flex items-center cursor-pointer">
             <Sprout className="h-6 w-6 text-primary mr-2" />
-            <h1 className="text-xl font-medium text-neutral-800">Little Farm List</h1>
+            <h1 className={`text-xl font-medium ${location === "/" ? "text-primary" : "text-neutral-800"}`}>Little Farm List</h1>
           </div>
         </Link>
 
         {/* Navigation - Desktop */}
         <nav className="hidden md:flex items-center space-x-6">
+          <Link href="/">
+            <span className={`text-sm font-medium ${location === "/" ? "text-primary" : "text-neutral-700 hover:text-primary"} transition-colors`}>
+              Home
+            </span>
+          </Link>
           <Link href="/explore">
-            <span className="text-sm font-medium text-neutral-700 hover:text-primary transition-colors">
+            <span className={`text-sm font-medium ${location === "/explore" ? "text-primary" : "text-neutral-700 hover:text-primary"} transition-colors`}>
               Explore
             </span>
           </Link>
           <Link href="/popular">
-            <span className="text-sm font-medium text-neutral-700 hover:text-primary transition-colors">
+            <span className={`text-sm font-medium ${location === "/popular" ? "text-primary" : "text-neutral-700 hover:text-primary"} transition-colors`}>
               Popular
             </span>
           </Link>
           <Link href="/map">
-            <span className="text-sm font-medium text-neutral-700 hover:text-primary transition-colors">
+            <span className={`text-sm font-medium ${location === "/map" ? "text-primary" : "text-neutral-700 hover:text-primary"} transition-colors`}>
               Map View
             </span>
           </Link>
           <Link href="/my-listings">
-            <span className="text-sm font-medium text-neutral-700 hover:text-primary transition-colors">
+            <span className={`text-sm font-medium ${location === "/my-listings" ? "text-primary" : "text-neutral-700 hover:text-primary"} transition-colors`}>
               My Listings
             </span>
           </Link>
           {isAuthenticated && (
             <Link href="/dashboard">
-              <span className="text-sm font-medium text-neutral-700 hover:text-primary transition-colors">
+              <span className={`text-sm font-medium ${location === "/dashboard" ? "text-primary" : "text-neutral-700 hover:text-primary"} transition-colors`}>
                 Dashboard
               </span>
             </Link>
@@ -134,36 +139,41 @@ export function Header() {
       {isMobileMenuOpen && (
         <div className="md:hidden mt-4 border-t pt-4">
           <nav className="flex flex-col space-y-3">
+            <Link href="/">
+              <span className={`text-sm font-medium ${location === "/" ? "text-primary" : "text-neutral-700 hover:text-primary"} transition-colors block py-1`}>
+                Home
+              </span>
+            </Link>
             <Link href="/explore">
-              <span className="text-sm font-medium text-neutral-700 hover:text-primary transition-colors block py-1">
+              <span className={`text-sm font-medium ${location === "/explore" ? "text-primary" : "text-neutral-700 hover:text-primary"} transition-colors block py-1`}>
                 Explore
               </span>
             </Link>
             <Link href="/popular">
-              <span className="text-sm font-medium text-neutral-700 hover:text-primary transition-colors block py-1">
+              <span className={`text-sm font-medium ${location === "/popular" ? "text-primary" : "text-neutral-700 hover:text-primary"} transition-colors block py-1`}>
                 Popular
               </span>
             </Link>
             <Link href="/map">
-              <span className="text-sm font-medium text-neutral-700 hover:text-primary transition-colors block py-1">
+              <span className={`text-sm font-medium ${location === "/map" ? "text-primary" : "text-neutral-700 hover:text-primary"} transition-colors block py-1`}>
                 Map View
               </span>
             </Link>
             <Link href="/my-listings">
-              <span className="text-sm font-medium text-neutral-700 hover:text-primary transition-colors block py-1">
+              <span className={`text-sm font-medium ${location === "/my-listings" ? "text-primary" : "text-neutral-700 hover:text-primary"} transition-colors block py-1`}>
                 My Listings
               </span>
             </Link>
             {isAuthenticated && (
               <Link href="/dashboard">
-                <span className="text-sm font-medium text-neutral-700 hover:text-primary transition-colors block py-1">
+                <span className={`text-sm font-medium ${location === "/dashboard" ? "text-primary" : "text-neutral-700 hover:text-primary"} transition-colors block py-1`}>
                   Dashboard
                 </span>
               </Link>
             )}
             {!isAuthenticated && (
               <Link href="/login">
-                <span className="text-sm font-medium text-neutral-700 hover:text-primary transition-colors block py-1">
+                <span className={`text-sm font-medium ${location === "/login" ? "text-primary" : "text-neutral-700 hover:text-primary"} transition-colors block py-1`}>
                   Log in
                 </span>
               </Link>
