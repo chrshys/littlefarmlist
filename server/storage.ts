@@ -1,4 +1,5 @@
 import { nanoid } from "nanoid";
+import { eq, sql } from "drizzle-orm";
 import {
   listings,
   type Listing,
@@ -7,6 +8,7 @@ import {
   type Item,
   type Coordinates
 } from "@shared/schema";
+import { db } from "./db";
 
 // Storage interface
 export interface IStorage {
@@ -16,6 +18,265 @@ export interface IStorage {
   getListingByEditToken(editToken: string): Promise<Listing | undefined>;
   updateListing(id: number, listing: Partial<InsertListing>): Promise<Listing | undefined>;
   deleteListing(id: number): Promise<boolean>;
+}
+
+// PostgreSQL database storage implementation
+export class DbStorage implements IStorage {
+  async createListing(listingData: CreateListing): Promise<Listing> {
+    const editToken = nanoid();
+    
+    // Use raw SQL for insertion (bypassing TypeScript for now)
+    const result = await db.execute(sql`
+      INSERT INTO listings (
+        title, 
+        description, 
+        items, 
+        categories, 
+        pickup_instructions, 
+        payment_info, 
+        address, 
+        coordinates, 
+        image_url, 
+        edit_token
+      ) VALUES (
+        ${listingData.title},
+        ${listingData.description || null},
+        ${JSON.stringify(listingData.items)},
+        ${JSON.stringify(listingData.categories || [])},
+        ${listingData.pickupInstructions},
+        ${listingData.paymentInfo || null},
+        ${listingData.address || ''},
+        ${listingData.coordinates ? JSON.stringify(listingData.coordinates) : null},
+        ${listingData.imageUrl || null},
+        ${editToken}
+      )
+      RETURNING *
+    `);
+    
+    // Convert database row to camelCase for TypeScript Listing type
+    const row = result.rows[0];
+    return {
+      id: row.id,
+      title: row.title,
+      description: row.description,
+      items: row.items,
+      categories: row.categories,
+      pickupInstructions: row.pickup_instructions,
+      paymentInfo: row.payment_info,
+      address: row.address,
+      coordinates: row.coordinates,
+      imageUrl: row.image_url,
+      createdAt: row.created_at,
+      editToken: row.edit_token
+    } as Listing;
+  }
+
+  async getListing(id: number): Promise<Listing | undefined> {
+    const result = await db.execute(sql`
+      SELECT * FROM listings WHERE id = ${id}
+    `);
+    
+    if (result.rows.length === 0) {
+      return undefined;
+    }
+    
+    // Convert row to camelCase for TypeScript Listing type
+    const row = result.rows[0];
+    return {
+      id: row.id,
+      title: row.title,
+      description: row.description,
+      items: row.items,
+      categories: row.categories,
+      pickupInstructions: row.pickup_instructions,
+      paymentInfo: row.payment_info,
+      address: row.address,
+      coordinates: row.coordinates,
+      imageUrl: row.image_url,
+      createdAt: row.created_at,
+      editToken: row.edit_token
+    } as Listing;
+  }
+
+  async getAllListings(): Promise<Listing[]> {
+    const result = await db.execute(sql`
+      SELECT * FROM listings
+    `);
+    
+    // Convert rows to camelCase for TypeScript Listing type
+    return result.rows.map(row => ({
+      id: row.id,
+      title: row.title,
+      description: row.description,
+      items: row.items,
+      categories: row.categories,
+      pickupInstructions: row.pickup_instructions,
+      paymentInfo: row.payment_info,
+      address: row.address,
+      coordinates: row.coordinates,
+      imageUrl: row.image_url,
+      createdAt: row.created_at,
+      editToken: row.edit_token
+    })) as Listing[];
+  }
+
+  async getListingByEditToken(editToken: string): Promise<Listing | undefined> {
+    const result = await db.execute(sql`
+      SELECT * FROM listings WHERE edit_token = ${editToken}
+    `);
+    
+    if (result.rows.length === 0) {
+      return undefined;
+    }
+    
+    // Convert row to camelCase for TypeScript Listing type
+    const row = result.rows[0];
+    return {
+      id: row.id,
+      title: row.title,
+      description: row.description,
+      items: row.items,
+      categories: row.categories,
+      pickupInstructions: row.pickup_instructions,
+      paymentInfo: row.payment_info,
+      address: row.address,
+      coordinates: row.coordinates,
+      imageUrl: row.image_url,
+      createdAt: row.created_at,
+      editToken: row.edit_token
+    } as Listing;
+  }
+
+  async updateListing(id: number, listingUpdate: Partial<InsertListing>): Promise<Listing | undefined> {
+    const existingListing = await this.getListing(id);
+    
+    if (!existingListing) {
+      return undefined;
+    }
+    
+    // Build the update SQL based on what fields are being updated
+    const updateFields: string[] = [];
+    
+    // Use separate SQL statements for each update scenario to avoid issues with dynamic SQL construction
+    // This is simplified compared to the previous approach but still achieves the same result
+    
+    if (Object.keys(listingUpdate).length === 0) {
+      return existingListing;
+    }
+    
+    if (listingUpdate.title !== undefined) {
+      const updateResult = await db.execute(sql`
+        UPDATE listings
+        SET title = ${listingUpdate.title}
+        WHERE id = ${id}
+        RETURNING *
+      `);
+      
+      if (updateResult.rows.length === 0) {
+        return undefined;
+      }
+    }
+    
+    if (listingUpdate.description !== undefined) {
+      await db.execute(sql`
+        UPDATE listings
+        SET description = ${listingUpdate.description}
+        WHERE id = ${id}
+      `);
+    }
+    
+    if (listingUpdate.items !== undefined) {
+      await db.execute(sql`
+        UPDATE listings
+        SET items = ${JSON.stringify(listingUpdate.items)}
+        WHERE id = ${id}
+      `);
+    }
+    
+    if (listingUpdate.categories !== undefined) {
+      await db.execute(sql`
+        UPDATE listings
+        SET categories = ${JSON.stringify(listingUpdate.categories)}
+        WHERE id = ${id}
+      `);
+    }
+    
+    if (listingUpdate.pickupInstructions !== undefined) {
+      await db.execute(sql`
+        UPDATE listings
+        SET pickup_instructions = ${listingUpdate.pickupInstructions}
+        WHERE id = ${id}
+      `);
+    }
+    
+    if (listingUpdate.paymentInfo !== undefined) {
+      await db.execute(sql`
+        UPDATE listings
+        SET payment_info = ${listingUpdate.paymentInfo}
+        WHERE id = ${id}
+      `);
+    }
+    
+    if (listingUpdate.address !== undefined) {
+      await db.execute(sql`
+        UPDATE listings
+        SET address = ${listingUpdate.address}
+        WHERE id = ${id}
+      `);
+    }
+    
+    if (listingUpdate.coordinates !== undefined) {
+      await db.execute(sql`
+        UPDATE listings
+        SET coordinates = ${JSON.stringify(listingUpdate.coordinates)}
+        WHERE id = ${id}
+      `);
+    }
+    
+    if (listingUpdate.imageUrl !== undefined) {
+      await db.execute(sql`
+        UPDATE listings
+        SET image_url = ${listingUpdate.imageUrl}
+        WHERE id = ${id}
+      `);
+    }
+    
+    // Get the updated listing
+    const result = await db.execute(sql`
+      SELECT * FROM listings WHERE id = ${id}
+    `);
+    
+    if (result.rows.length === 0) {
+      return undefined;
+    }
+    
+    // Convert row to camelCase for TypeScript Listing type
+    const row = result.rows[0];
+    return {
+      id: row.id,
+      title: row.title,
+      description: row.description,
+      items: row.items,
+      categories: row.categories,
+      pickupInstructions: row.pickup_instructions,
+      paymentInfo: row.payment_info,
+      address: row.address,
+      coordinates: row.coordinates,
+      imageUrl: row.image_url,
+      createdAt: row.created_at,
+      editToken: row.edit_token
+    } as Listing;
+  }
+
+  async deleteListing(id: number): Promise<boolean> {
+    const result = await db.execute(sql`
+      DELETE FROM listings
+      WHERE id = ${id}
+      RETURNING id
+    `);
+    
+    return result.rows.length > 0;
+  }
 }
 
 // In-memory storage implementation
@@ -99,4 +360,5 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// Use the database storage implementation
+export const storage = new DbStorage();

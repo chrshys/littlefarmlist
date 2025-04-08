@@ -66,14 +66,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(401).json({ message: "Edit token is required" });
     }
     
+    // First try to get the listing directly
     const listing = await storage.getListing(id);
     
     if (!listing) {
       return res.status(404).json({ message: "Listing not found" });
     }
     
+    // Log tokens for debugging
+    console.log(`Comparing tokens: Listing token=${listing.editToken}, Request token=${editToken}`);
+    
     if (listing.editToken !== editToken) {
-      return res.status(403).json({ message: "Invalid edit token" });
+      // Double-check by using getListingByEditToken method
+      const listingByToken = await storage.getListingByEditToken(editToken);
+      
+      if (!listingByToken || listingByToken.id !== id) {
+        return res.status(403).json({ message: "Invalid edit token" });
+      }
     }
     
     try {
@@ -84,6 +93,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updatedListing = await storage.updateListing(id, validatedUpdate);
       res.json(updatedListing);
     } catch (error) {
+      console.error("Error updating listing:", error);
       if (error instanceof ZodError) {
         const validationError = fromZodError(error);
         res.status(400).json({ message: validationError.message });
@@ -106,14 +116,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(401).json({ message: "Edit token is required" });
     }
     
+    // First try to get the listing directly
     const listing = await storage.getListing(id);
     
     if (!listing) {
       return res.status(404).json({ message: "Listing not found" });
     }
     
+    // Log tokens for debugging
+    console.log(`Comparing tokens for delete: Listing token=${listing.editToken}, Request token=${editToken}`);
+    
     if (listing.editToken !== editToken) {
-      return res.status(403).json({ message: "Invalid edit token" });
+      // Double-check by using getListingByEditToken method
+      const listingByToken = await storage.getListingByEditToken(editToken);
+      
+      if (!listingByToken || listingByToken.id !== id) {
+        return res.status(403).json({ message: "Invalid edit token" });
+      }
     }
     
     const success = await storage.deleteListing(id);
