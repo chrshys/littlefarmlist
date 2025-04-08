@@ -7,27 +7,38 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
-export async function apiRequest(
-  method: string,
-  url: string,
-  data?: unknown | undefined,
-): Promise<Response> {
+export async function apiRequest<T = any>({
+  url,
+  method,
+  body,
+  on401 = "throw" as UnauthorizedBehavior
+}: {
+  url: string;
+  method: string;
+  body?: unknown;
+  on401?: UnauthorizedBehavior;
+}): Promise<T> {
   console.log(`API Request: ${method} ${url}`);
-  if (data) {
-    console.log('Request data:', data);
+  if (body) {
+    console.log('Request data:', body);
   }
   
   const res = await fetch(url, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
-    body: data ? JSON.stringify(data) : undefined,
+    headers: body ? { "Content-Type": "application/json" } : {},
+    body: body ? JSON.stringify(body) : undefined,
     credentials: "include",
   });
 
   console.log(`API Response: ${res.status} ${res.statusText}`);
+  
+  if (on401 === "returnNull" && res.status === 401) {
+    return null as any;
+  }
+  
   try {
     await throwIfResNotOk(res);
-    return res;
+    return await res.json();
   } catch (error) {
     console.error('API Request failed:', error);
     throw error;

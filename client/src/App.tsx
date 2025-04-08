@@ -12,6 +12,8 @@ import MyListings from "@/pages/my-listings";
 import PopularListings from "@/pages/popular-listings";
 import MapView from "@/pages/map-view";
 import Explore from "@/pages/explore";
+import Login from "@/pages/login";
+import Signup from "@/pages/signup";
 
 function Router() {
   return (
@@ -25,8 +27,8 @@ function Router() {
         <Route path="/popular" component={PopularListings} />
         <Route path="/map" component={MapView} />
         <Route path="/explore" component={Explore} />
-        <Route path="/login" component={NotFound} />
-        <Route path="/signup" component={NotFound} />
+        <Route path="/login" component={Login} />
+        <Route path="/signup" component={Signup} />
         <Route component={NotFound} />
       </Switch>
     </Layout>
