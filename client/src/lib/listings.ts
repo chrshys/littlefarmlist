@@ -1,5 +1,5 @@
 import { Listing, CreateListingForm, Coordinates } from "@/types/listing";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 // LocalStorage keys
 const LISTINGS_STORAGE_KEY = "small-things-listings";
@@ -56,6 +56,9 @@ export async function createListing(listing: CreateListingForm): Promise<Listing
   // Save edit token to localStorage
   saveListingToken(newListing.id, newListing.editToken);
   
+  // Invalidate the listings query to ensure updated data on dashboard
+  queryClient.invalidateQueries({ queryKey: ['/api/listings'] });
+  
   return newListing;
 }
 
@@ -65,11 +68,17 @@ export async function updateListing(
   editToken: string, 
   updates: Partial<CreateListingForm>
 ): Promise<Listing> {
-  return await apiRequest({
+  const updatedListing = await apiRequest({
     method: "PATCH", 
     url: `/api/listings/${listingId}?editToken=${editToken}`, 
     body: updates
   });
+  
+  // Invalidate both the specific listing and the listings collection
+  queryClient.invalidateQueries({ queryKey: [`/api/listings/${listingId}`] });
+  queryClient.invalidateQueries({ queryKey: ['/api/listings'] });
+  
+  return updatedListing;
 }
 
 // Delete a listing
@@ -81,6 +90,10 @@ export async function deleteListing(listingId: number, editToken: string): Promi
   
   // Remove from localStorage
   deleteListingToken(listingId);
+  
+  // Invalidate the listings query to ensure dashboard updates
+  queryClient.invalidateQueries({ queryKey: ['/api/listings'] });
+  
   return true;
 }
 
