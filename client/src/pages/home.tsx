@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
@@ -6,12 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, Filter, Sprout } from "lucide-react";
+import { Search, Sprout } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/listings";
 import { Listing } from "@/types/listing";
+import { CategoryRow } from "@/components/CategoryRow";
 
 export default function Home() {
   const [_, navigate] = useLocation();
+  const [selectedCategory, setSelectedCategory] = useState<string>("Discover");
   
   // Fetch all listings
   const { data: listings = [], isLoading } = useQuery<Listing[]>({
@@ -76,39 +78,20 @@ export default function Home() {
       
       {/* Categories */}
       <section className="mb-10">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold">Browse by category</h2>
-        </div>
-        
-        <div className="flex items-center justify-between">
-          {/* Scrollable categories container */}
-          <div className="flex-1 overflow-x-auto hide-scrollbar">
-            <div className="flex gap-2">
-              {categories.map((category, index) => (
-                <Button 
-                  key={index}
-                  variant={index === 0 ? "secondary" : "outline"}
-                  className="whitespace-nowrap"
-                  onClick={() => {/* Would filter by category */}}
-                >
-                  {category}
-                </Button>
-              ))}
-            </div>
-          </div>
-          
-          {/* Filter button always right-aligned with a keyline */}
-          <div className="ml-2 flex-shrink-0 border-l border-neutral-200 flex items-center p-0">
-            <Button 
-              variant="ghost"
-              size="sm"
-              className="flex items-center gap-2 ml-3 h-9"
-              onClick={() => {/* Would open filter modal */}}
-            >
-              <Filter className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
+        <CategoryRow 
+          categories={categories}
+          title="Browse by category"
+          selectedCategory={selectedCategory}
+          onCategoryClick={(category) => {
+            setSelectedCategory(category);
+            // Here you would filter listings by the selected category
+            console.log(`Selected category: ${category}`);
+          }}
+          onFilterClick={() => {
+            // Would open filter modal
+            console.log("Filter clicked");
+          }}
+        />
       </section>
       
       {/* Listings Grid */}

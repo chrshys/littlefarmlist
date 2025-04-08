@@ -9,24 +9,35 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Search, Filter, Sprout } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/listings";
 import { Listing } from "@/types/listing";
+import { CategoryRow } from "@/components/CategoryRow";
 
 export default function Explore() {
   const [_, navigate] = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("All");
   
   // Fetch all listings
   const { data: listings = [], isLoading } = useQuery<Listing[]>({
     queryKey: ["/api/listings"],
   });
   
-  // Filter listings based on search term
-  const filteredListings = searchTerm 
-    ? listings.filter(listing => 
-        listing.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        listing.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        listing.items.some(item => item.name.toLowerCase().includes(searchTerm.toLowerCase()))
-      )
-    : listings;
+  // Filter listings based on search term and category
+  const filteredListings = listings.filter(listing => {
+    // Filter by search term if provided
+    const matchesSearchTerm = !searchTerm || 
+      listing.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      listing.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      listing.items.some(item => item.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    // Filter by category if not "All"
+    const matchesCategory = selectedCategory === "All" || 
+      // Here you would ideally have a category field on the listing
+      // For now, we'll just simulate matching based on title and items
+      listing.title.toLowerCase().includes(selectedCategory.toLowerCase()) ||
+      listing.items.some(item => item.name.toLowerCase().includes(selectedCategory.toLowerCase()));
+    
+    return matchesSearchTerm && matchesCategory;
+  });
   
   // Categories for filtering
   const categories = [
@@ -63,25 +74,30 @@ export default function Explore() {
       
       {/* Categories */}
       <div className="mb-8">
-        <h2 className="text-lg font-medium mb-3">Categories</h2>
-        <div className="flex overflow-x-auto gap-2 pb-2 hide-scrollbar">
-          {categories.map((category, index) => (
-            <Button 
-              key={index}
-              variant={index === 0 ? "secondary" : "outline"}
-              className="whitespace-nowrap"
-            >
-              {category}
-            </Button>
-          ))}
-        </div>
+        <CategoryRow 
+          categories={categories}
+          title="Categories"
+          selectedCategory={selectedCategory}
+          onCategoryClick={(category) => {
+            setSelectedCategory(category);
+          }}
+          onFilterClick={() => {
+            // Would open filter modal
+            console.log("Filter clicked");
+          }}
+        />
       </div>
       
       {/* Listing Results */}
       <div>
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-medium">
-            {searchTerm ? `Search results for "${searchTerm}"` : "All listings"}
+            {searchTerm 
+              ? `Search results for "${searchTerm}"${selectedCategory !== "All" ? ` in ${selectedCategory}` : ''}` 
+              : selectedCategory !== "All" 
+                ? `${selectedCategory} listings` 
+                : "All listings"
+            }
           </h2>
           <div className="text-sm text-neutral-500">
             {filteredListings.length} {filteredListings.length === 1 ? 'listing' : 'listings'} found
@@ -116,13 +132,22 @@ export default function Explore() {
             <p className="text-neutral-600 mb-6 max-w-md mx-auto">
               {searchTerm 
                 ? "Try a different search term or browse all listings" 
-                : "No listings are available at the moment"}
+                : selectedCategory !== "All"
+                  ? `No ${selectedCategory.toLowerCase()} listings are available at the moment`
+                  : "No listings are available at the moment"}
             </p>
-            {searchTerm && (
-              <Button variant="outline" onClick={() => setSearchTerm("")}>
-                Clear search
-              </Button>
-            )}
+            <div className="flex justify-center gap-3">
+              {searchTerm && (
+                <Button variant="outline" onClick={() => setSearchTerm("")}>
+                  Clear search
+                </Button>
+              )}
+              {selectedCategory !== "All" && (
+                <Button variant="outline" onClick={() => setSelectedCategory("All")}>
+                  View all categories
+                </Button>
+              )}
+            </div>
           </div>
         )}
         
