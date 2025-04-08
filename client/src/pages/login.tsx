@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
 
 // Login form schema
 const loginSchema = z.object({
@@ -32,6 +33,9 @@ export default function Login() {
     },
   });
 
+  // Get the refetch function from auth hook
+  const { refetch } = useAuth();
+
   // Form submission handler
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
@@ -46,6 +50,12 @@ export default function Login() {
       
       console.log("Login response:", response);
 
+      // Invalidate the auth query cache to refresh the authentication state
+      await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      
+      // Explicitly refetch the current user
+      await refetch();
+      
       toast({
         title: "Login Successful",
         description: "You are now logged in.",
