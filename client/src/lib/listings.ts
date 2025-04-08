@@ -67,12 +67,23 @@ export async function createListing(listing: CreateListingForm): Promise<Listing
 // Update a listing
 export async function updateListing(
   listingId: number, 
-  updates: Partial<CreateListingForm>
+  updates: Partial<CreateListingForm>,
+  editToken?: string
 ): Promise<Listing> {
+  const headers: Record<string, string> = {};
+  
+  // Add Authorization header if editToken is provided
+  if (editToken) {
+    headers["Authorization"] = `Bearer ${editToken}`;
+  }
+  
   const updatedListing = await apiRequest({
     method: "PATCH", 
     url: `/api/listings/${listingId}`, 
-    body: updates
+    body: {
+      ...updates,
+      editToken
+    }
   });
   
   // Invalidate queries

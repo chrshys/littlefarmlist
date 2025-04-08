@@ -91,12 +91,25 @@ export default function CreateListing() {
     }
   });
   
+  // Get editToken from localStorage if available
+  const [editToken, setEditToken] = useState<string | null>(null);
+  
+  useEffect(() => {
+    if (isEditMode && editId) {
+      const token = localStorage.getItem(`listing_token_${editId}`);
+      if (token) {
+        setEditToken(token);
+        console.log('Found edit token in localStorage:', token);
+      }
+    }
+  }, [isEditMode, editId]);
+  
   // Fetch existing listing data in edit mode
   const { data: existingListing } = useQuery<Listing>({
-    queryKey: ['listing', editId],
+    queryKey: ['listing', editId, editToken],
     queryFn: () => apiRequest<Listing>({ 
-      url: `/api/listings/${editId}`,
-      method: 'GET'
+      url: `/api/listings/${editId}?token=${editToken || ''}`,
+      method: 'GET',
     }),
     enabled: isEditMode && !!editId
   });
@@ -222,8 +235,8 @@ export default function CreateListing() {
       let listing: Listing;
       
       if (isEditMode && editId) {
-        // Update existing listing
-        listing = await updateListing(editId, data);
+        // Update existing listing with editToken
+        listing = await updateListing(editId, data, editToken || undefined);
         console.log("Listing updated successfully:", listing);
         
         // Redirect to My Listings page after update

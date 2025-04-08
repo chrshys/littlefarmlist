@@ -40,6 +40,10 @@ export default function MyListings() {
   
   // Handle edit
   const handleEdit = (id: number, editToken: string) => {
+    // Save the edit token to localStorage so we can use it on the edit form
+    if (editToken) {
+      localStorage.setItem(`listing_token_${id}`, editToken);
+    }
     navigate(`/create?edit=${id}`);
   };
   
