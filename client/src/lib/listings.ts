@@ -1,48 +1,12 @@
 import { Listing, CreateListingForm, Coordinates } from "@/types/listing";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
-// LocalStorage keys
-const LISTINGS_STORAGE_KEY = "small-things-listings";
-const MY_LISTINGS_KEY = "small-things-my-listings";
-
-// Function to save a listing's edit token to localStorage
-export function saveListingToken(listingId: number, editToken: string): void {
-  // Get current listings or initialize empty object
-  const myListings = getMyListings();
-  
-  // Save this listing in my listings
-  myListings[listingId] = editToken;
-  
-  // Update storage
-  localStorage.setItem(MY_LISTINGS_KEY, JSON.stringify(myListings));
-}
-
-// Function to get edit token for a listing
-export function getListingToken(listingId: number): string | null {
-  const myListings = getMyListings();
-  return myListings[listingId] || null;
-}
-
-// Function to get all my listings
-export function getMyListings(): Record<number, string> {
-  try {
-    const listingsData = localStorage.getItem(MY_LISTINGS_KEY);
-    if (!listingsData) return {};
-    return JSON.parse(listingsData);
-  } catch (error) {
-    console.error("Error parsing my listings from localStorage", error);
-    return {};
-  }
-}
-
-// Delete a listing token
-export function deleteListingToken(listingId: number): void {
-  const myListings = getMyListings();
-  
-  if (myListings[listingId]) {
-    delete myListings[listingId];
-    localStorage.setItem(MY_LISTINGS_KEY, JSON.stringify(myListings));
-  }
+// Function to get user's listings from the API (replaces the localStorage version)
+export async function getMyListings(): Promise<Listing[]> {
+  return apiRequest({
+    method: "GET",
+    url: "/api/user/listings"
+  });
 }
 
 // Create a new listing
@@ -53,9 +17,6 @@ export async function createListing(listing: CreateListingForm): Promise<Listing
     body: listing
   });
   
-  // Save edit token to localStorage as a backup (will eventually be removed)
-  saveListingToken(newListing.id, newListing.editToken);
-  
   // Invalidate the listings query to ensure updated data on dashboard
   queryClient.invalidateQueries({ queryKey: ['/api/listings'] });
   // Also invalidate user listings
@@ -64,16 +25,11 @@ export async function createListing(listing: CreateListingForm): Promise<Listing
   return newListing;
 }
 
-// Update a listing
+// Update a listing - now requires authentication instead of edit token
 export async function updateListing(
   listingId: number, 
-  updates: Partial<CreateListingForm>,
-  editToken?: string
+  updates: Partial<CreateListingForm>
 ): Promise<Listing> {
-  // Note: We only need the editToken for non-authenticated routes
-  // When logged in, we don't need it because the server will check if
-  // we own the listing instead using the authentication session
-  
   const updatedListing = await apiRequest({
     method: "PATCH", 
     url: `/api/listings/${listingId}`, 
@@ -89,15 +45,11 @@ export async function updateListing(
 }
 
 // Delete a listing
-export async function deleteListing(listingId: number, editToken?: string): Promise<boolean> {
-  // We don't need the editToken anymore but keeping it as optional parameter for backward compatibility
+export async function deleteListing(listingId: number): Promise<boolean> {
   await apiRequest({
     method: "DELETE", 
     url: `/api/listings/${listingId}`
   });
-  
-  // Remove from localStorage (legacy cleanup)
-  deleteListingToken(listingId);
   
   // Invalidate the queries to ensure dashboard updates
   queryClient.invalidateQueries({ queryKey: ['/api/listings'] });

@@ -1,49 +1,40 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useLocation, useParams } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { CheckIcon, Clipboard, Share, Edit, ArrowDown } from "lucide-react";
+import { CheckIcon, Clipboard, Share, Edit } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { getListingToken, formatCurrency } from "@/lib/listings";
-import { Listing, Item } from "@/types/listing";
+import { formatCurrency } from "@/lib/listings";
+import { Listing } from "@/types/listing";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function Confirmation() {
   const { id = "0" } = useParams();
   const [_, navigate] = useLocation();
   const { toast } = useToast();
   const [copied, setCopied] = useState("");
+  const { user } = useAuth();
   
   const listingId = parseInt(id, 10);
-  const editToken = getListingToken(listingId);
   
-  const { data: listing = { 
-    id: listingId, 
-    title: "", 
-    description: "", 
-    items: [], 
-    pickupInstructions: "",
-    createdAt: new Date(),
-    editToken: "" 
-  } as Listing } = useQuery<Listing>({
+  const { data: listing, isLoading } = useQuery<Listing>({
     queryKey: [`/api/listings/${id}`],
     // The query will use the default queryFn from queryClient.ts
   });
 
-  // Security check - if we don't have edit token for this listing, go home
-  useEffect(() => {
-    if (!editToken) {
-      navigate("/");
-    }
-  }, [editToken, navigate]);
+  // Security check - if we're not logged in or don't own this listing, go home
+  if (!user) {
+    navigate("/login");
+    return null;
+  }
 
   // Public sharing URL
   const baseUrl = window.location.origin;
   const publicUrl = `${baseUrl}/l/${listingId}`;
-  const editUrl = `${publicUrl}?edit=${editToken}`;
 
   // Copy to clipboard function
-  const copyToClipboard = (text: string, type: "public" | "edit") => {
+  const copyToClipboard = (text: string, type: "public") => {
     navigator.clipboard.writeText(text)
       .then(() => {
         setCopied(type);
@@ -174,46 +165,10 @@ export default function Confirmation() {
           <Button
             variant="outline"
             className="w-full"
-            onClick={() => navigate(`/l/${listing.id}?edit=${editToken}`)}
+            onClick={() => navigate(`/l/${listing.id}`)}
           >
             <Edit className="h-4 w-4 mr-2" />
             Edit this listing
-          </Button>
-          
-          <div className="mt-4 flex items-center justify-center">
-            <ArrowDown className="h-4 w-4 text-neutral-400" />
-          </div>
-        </CardContent>
-      </Card>
-      
-      {/* Edit Link Section */}
-      <Card className="mb-6">
-        <CardContent className="p-6">
-          <h3 className="font-medium text-neutral-800 mb-2">Edit link (for you only)</h3>
-          <p className="text-sm text-neutral-500 mb-4">
-            Save this link to edit your listing later. Don't share it with others.
-          </p>
-          
-          <div className="bg-neutral-100 rounded-md p-3 mb-4 break-all">
-            <p className="text-sm font-medium text-neutral-800">{editUrl}</p>
-          </div>
-          
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={() => copyToClipboard(editUrl, "edit")}
-          >
-            {copied === "edit" ? (
-              <>
-                <CheckIcon className="h-4 w-4 mr-2" />
-                Copied
-              </>
-            ) : (
-              <>
-                <Clipboard className="h-4 w-4 mr-2" />
-                Copy edit link
-              </>
-            )}
           </Button>
         </CardContent>
       </Card>

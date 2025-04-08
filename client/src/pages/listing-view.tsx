@@ -5,12 +5,13 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Pencil, Save, X, ArrowLeft, Tag } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getListingToken, formatCurrency, updateListing } from "@/lib/listings";
+import { formatCurrency, updateListing } from "@/lib/listings";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Listing, Item } from "@/types/listing";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function ListingView() {
   const { id = "0" } = useParams();
@@ -18,16 +19,7 @@ export default function ListingView() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isEditMode, setIsEditMode] = useState(false);
-  
-  // Extract the editToken from the URL if present
-  const searchParams = new URLSearchParams(window.location.search);
-  const editTokenParam = searchParams.get("edit");
-  
-  // Get the stored token for this listing
-  const storedToken = getListingToken(parseInt(id, 10));
-  
-  // Check if edit mode is allowed
-  const canEdit = editTokenParam && (editTokenParam === storedToken);
+  const { user } = useAuth();
   
   // State for editable fields
   const [editForm, setEditForm] = useState({
@@ -41,25 +33,18 @@ export default function ListingView() {
   });
   
   // Fetch the listing data
-  const { data: listing = {
-    id: parseInt(id, 10),
-    title: "",
-    description: "",
-    items: [],
-    pickupInstructions: "",
-    paymentInfo: "",
-    imageUrl: "",
-    createdAt: new Date(),
-    editToken: ""
-  } as Listing, isLoading, error } = useQuery<Listing>({
+  const { data: listing, isLoading, error } = useQuery<Listing>({
     queryKey: [`/api/listings/${id}`],
   });
+
+  // Check if the current user is the owner of the listing
+  const canEdit = user && listing && user.id === listing.userId;
   
   // Update mutation
   const updateMutation = useMutation({
     mutationFn: (updates: typeof editForm) => {
-      if (!canEdit || !storedToken) throw new Error("Not authorized to edit");
-      return updateListing(parseInt(id, 10), storedToken, updates);
+      if (!canEdit) throw new Error("Not authorized to edit this listing");
+      return updateListing(parseInt(id, 10), updates);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/listings/${id}`] });
@@ -90,15 +75,13 @@ export default function ListingView() {
         paymentInfo: listing.paymentInfo || "",
         imageUrl: listing.imageUrl || ""
       });
+
+      // If they're the owner, add an edit button
+      if (canEdit) {
+        // Add edit button to the UI
+      }
     }
-  }, [listing]);
-  
-  // Check if we should enter edit mode from URL param
-  useEffect(() => {
-    if (canEdit && listing) {
-      setIsEditMode(true);
-    }
-  }, [canEdit, listing]);
+  }, [listing, canEdit]);
   
   // Handle edit form changes
   const handleFormChange = (field: string, value: string | any[]) => {
@@ -375,6 +358,17 @@ export default function ListingView() {
           )}
         </CardContent>
       </Card>
+      
+      {/* Edit Button for Owner */}
+      {!isEditMode && canEdit && (
+        <Button
+          onClick={() => setIsEditMode(true)}
+          className="w-full py-5 mb-3"
+        >
+          <Pencil className="h-4 w-4 mr-2" />
+          Edit this listing
+        </Button>
+      )}
       
       {/* Edit Mode Controls */}
       {isEditMode && (

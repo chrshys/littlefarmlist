@@ -49,8 +49,8 @@ export const listings = pgTable("listings", {
   coordinates: jsonb("coordinates").$type<Coordinates>(),
   imageUrl: text("image_url"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  editToken: text("edit_token").notNull(),
-  userId: integer("user_id").references(() => users.id, { onDelete: "set null" }),
+  // editToken removed as all users have accounts now
+  userId: integer("user_id").references(() => users.id, { onDelete: "set null" }).notNull(),
 });
 
 export const listingsRelations = relations(listings, ({ many, one }) => ({
@@ -95,8 +95,6 @@ export const createListingSchema = insertListingSchema.extend({
   address: z.string().min(5, "Address is required"),
   coordinates: coordinatesSchema.optional(),
   userId: z.number().optional(),
-}).omit({
-  editToken: true, // Allow server to generate this
 });
 
 // Category schemas

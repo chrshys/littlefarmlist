@@ -30,7 +30,6 @@ export interface IStorage {
   getListing(id: number): Promise<Listing | undefined>;
   getAllListings(): Promise<Listing[]>;
   getUserListings(userId: number): Promise<Listing[]>;
-  getListingByEditToken(editToken: string): Promise<Listing | undefined>;
   updateListing(id: number, listing: Partial<InsertListing>): Promise<Listing | undefined>;
   deleteListing(id: number): Promise<boolean>;
   
@@ -67,7 +66,10 @@ export interface IStorage {
 // PostgreSQL database storage implementation
 export class DbStorage implements IStorage {
   async createListing(listingData: CreateListing): Promise<Listing> {
-    const editToken = nanoid();
+    // Check if we have a userId - all listings must be associated with a user now
+    if (!listingData.userId) {
+      throw new Error("User ID is required to create a listing");
+    }
     
     // Use raw SQL for insertion (bypassing TypeScript for now)
     const result = await db.execute(sql`
@@ -80,8 +82,7 @@ export class DbStorage implements IStorage {
         payment_info, 
         address, 
         coordinates, 
-        image_url, 
-        edit_token,
+        image_url,
         user_id
       ) VALUES (
         ${listingData.title},
@@ -93,8 +94,7 @@ export class DbStorage implements IStorage {
         ${listingData.address || ''},
         ${listingData.coordinates ? JSON.stringify(listingData.coordinates) : null},
         ${listingData.imageUrl || null},
-        ${editToken},
-        ${listingData.userId || null}
+        ${listingData.userId}
       )
       RETURNING *
     `);
@@ -113,7 +113,7 @@ export class DbStorage implements IStorage {
       coordinates: row.coordinates,
       imageUrl: row.image_url,
       createdAt: row.created_at,
-      editToken: row.edit_token,
+      
       userId: row.user_id
     } as Listing;
   }
@@ -141,7 +141,7 @@ export class DbStorage implements IStorage {
       coordinates: row.coordinates,
       imageUrl: row.image_url,
       createdAt: row.created_at,
-      editToken: row.edit_token,
+      
       userId: row.user_id
     } as Listing;
   }
@@ -164,7 +164,7 @@ export class DbStorage implements IStorage {
       coordinates: row.coordinates,
       imageUrl: row.image_url,
       createdAt: row.created_at,
-      editToken: row.edit_token,
+      
       userId: row.user_id
     })) as Listing[];
   }
@@ -187,38 +187,12 @@ export class DbStorage implements IStorage {
       coordinates: row.coordinates,
       imageUrl: row.image_url,
       createdAt: row.created_at,
-      editToken: row.edit_token,
+      
       userId: row.user_id
     })) as Listing[];
   }
 
-  async getListingByEditToken(editToken: string): Promise<Listing | undefined> {
-    const result = await db.execute(sql`
-      SELECT * FROM listings WHERE edit_token = ${editToken}
-    `);
-    
-    if (result.rows.length === 0) {
-      return undefined;
-    }
-    
-    // Convert row to camelCase for TypeScript Listing type
-    const row = result.rows[0];
-    return {
-      id: row.id,
-      title: row.title,
-      description: row.description,
-      items: row.items,
-      categories: row.categories,
-      pickupInstructions: row.pickup_instructions,
-      paymentInfo: row.payment_info,
-      address: row.address,
-      coordinates: row.coordinates,
-      imageUrl: row.image_url,
-      createdAt: row.created_at,
-      editToken: row.edit_token,
-      userId: row.user_id
-    } as Listing;
-  }
+  // Edit token functionality removed as all users have accounts now
 
   async updateListing(id: number, listingUpdate: Partial<InsertListing>): Promise<Listing | undefined> {
     const existingListing = await this.getListing(id);
@@ -345,7 +319,7 @@ export class DbStorage implements IStorage {
       coordinates: row.coordinates,
       imageUrl: row.image_url,
       createdAt: row.created_at,
-      editToken: row.edit_token,
+      
       userId: row.user_id
     } as Listing;
   }
@@ -546,7 +520,7 @@ export class DbStorage implements IStorage {
       coordinates: row.coordinates,
       imageUrl: row.image_url,
       createdAt: row.created_at,
-      editToken: row.edit_token,
+      
       userId: row.user_id
     })) as Listing[];
   }
@@ -801,7 +775,7 @@ export class DbStorage implements IStorage {
       coordinates: row.coordinates,
       imageUrl: row.image_url,
       createdAt: row.created_at,
-      editToken: row.edit_token,
+      
       userId: row.user_id
     })) as Listing[];
   }
@@ -841,8 +815,12 @@ export class MemStorage implements IStorage {
   }
 
   async createListing(listingData: CreateListing): Promise<Listing> {
+    // Check if we have a userId - all listings must be associated with a user now
+    if (!listingData.userId) {
+      throw new Error("User ID is required to create a listing");
+    }
+    
     const id = this.listingCurrentId++;
-    const editToken = nanoid();
     const createdAt = new Date();
     
     const listing: Listing = {
@@ -858,8 +836,7 @@ export class MemStorage implements IStorage {
       coordinates: listingData.coordinates || null,
       imageUrl: listingData.imageUrl || null,
       createdAt,
-      editToken,
-      userId: listingData.userId || null
+      userId: listingData.userId
     };
     
     this.listings[id] = listing;
@@ -876,12 +853,6 @@ export class MemStorage implements IStorage {
 
   async getAllListings(): Promise<Listing[]> {
     return Object.values(this.listings);
-  }
-
-  async getListingByEditToken(editToken: string): Promise<Listing | undefined> {
-    return Object.values(this.listings).find(
-      (listing) => listing.editToken === editToken
-    );
   }
 
   async updateListing(id: number, listingUpdate: Partial<InsertListing>): Promise<Listing | undefined> {
@@ -904,8 +875,7 @@ export class MemStorage implements IStorage {
       coordinates: listingUpdate.coordinates ?? listing.coordinates,
       imageUrl: listingUpdate.imageUrl ?? listing.imageUrl,
       createdAt: listing.createdAt,
-      editToken: listing.editToken,
-      userId: listingUpdate.userId ?? listing.userId ?? null
+      userId: listingUpdate.userId ?? listing.userId
     };
     
     this.listings[id] = updatedListing;

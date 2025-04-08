@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,44 +6,27 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Edit, Share, Trash2, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useQueries } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { getMyListings, formatDate, deleteListing, formatCurrency } from "@/lib/listings";
 import { Listing } from "@/types/listing";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function MyListings() {
   const [_, navigate] = useLocation();
   const { toast } = useToast();
-  const [listingIds, setListingIds] = useState<number[]>([]);
   const [isDeleting, setIsDeleting] = useState<number | null>(null);
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
   
-  // Get all my listing IDs from localStorage
-  useEffect(() => {
-    const myListings = getMyListings();
-    setListingIds(Object.keys(myListings).map(id => parseInt(id, 10)));
-  }, []);
-  
-  // Fetch all listings data
-  const listingQueries = useQueries({
-    queries: listingIds.map(id => ({
-      queryKey: [`/api/listings/${id}`],
-      staleTime: 60 * 1000, // 1 minute
-    })),
+  // Fetch my listings
+  const { data: myListings = [], isLoading, error } = useQuery<Listing[]>({
+    queryKey: ['/api/user/listings'],
+    staleTime: 60 * 1000 // 1 minute
   });
   
-  // Extract listings data and loading states
-  const isLoading = listingQueries.some(query => query.isLoading);
-  const myListings = listingQueries
-    .filter(query => query.data)
-    .map(query => query.data as Listing)
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  
-  // Handle edit
-  const handleEdit = (id: number, editToken: string) => {
-    // Save the edit token to localStorage so we can use it on the edit form
-    if (editToken) {
-      localStorage.setItem(`listing_token_${id}`, editToken);
-    }
+  // Handle edit - now uses account authentication instead of edit tokens
+  const handleEdit = (id: number) => {
     navigate(`/create?edit=${id}`);
   };
   
@@ -77,14 +60,14 @@ export default function MyListings() {
     }
   };
   
-  // Handle delete
-  const handleDelete = async (id: number, editToken: string) => {
+  // Handle delete - now uses account authentication instead of edit tokens
+  const handleDelete = async (id: number) => {
     setIsDeleting(id);
     try {
-      await deleteListing(id, editToken);
+      await deleteListing(id);
       
-      // Update the list by removing this ID
-      setListingIds(prev => prev.filter(listingId => listingId !== id));
+      // Refresh the listings after deletion
+      queryClient.invalidateQueries({ queryKey: ['/api/user/listings'] });
       
       toast({
         title: "Listing deleted",
@@ -210,7 +193,7 @@ export default function MyListings() {
                       variant="ghost"
                       size="sm"
                       className="text-neutral-500 hover:text-neutral-700 h-9 flex items-center gap-1"
-                      onClick={() => handleEdit(listing.id, listing.editToken)}
+                      onClick={() => handleEdit(listing.id)}
                     >
                       <Edit className="h-4 w-4" />
                       <span className="sm:hidden text-xs">Edit</span>
@@ -245,7 +228,7 @@ export default function MyListings() {
                         <AlertDialogFooter className="flex-col sm:flex-row gap-2">
                           <AlertDialogCancel className="mt-0">Cancel</AlertDialogCancel>
                           <AlertDialogAction
-                            onClick={() => handleDelete(listing.id, listing.editToken)}
+                            onClick={() => handleDelete(listing.id)}
                             className="bg-red-500 hover:bg-red-600"
                           >
                             {isDeleting === listing.id ? "Deleting..." : "Delete"}
@@ -258,7 +241,7 @@ export default function MyListings() {
                     variant="outline"
                     size="sm"
                     className="text-primary hover:text-primary/90 hover:bg-primary/5"
-                    onClick={() => handleEdit(listing.id, listing.editToken)}
+                    onClick={() => handleEdit(listing.id)}
                   >
                     Edit
                   </Button>

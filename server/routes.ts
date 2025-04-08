@@ -407,18 +407,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Add a category to a listing
-  router.post("/listings/:listingId/categories/:categoryId", async (req, res) => {
+  // Add a category to a listing (requires authentication now)
+  router.post("/listings/:listingId/categories/:categoryId", isAuthenticated, async (req, res) => {
     const listingId = parseInt(req.params.listingId, 10);
     const categoryId = parseInt(req.params.categoryId, 10);
-    const editToken = req.query.editToken as string;
+    const userId = (req.user as any).id;
     
     if (isNaN(listingId) || isNaN(categoryId)) {
       return res.status(400).json({ message: "Invalid ID parameters" });
-    }
-    
-    if (!editToken) {
-      return res.status(401).json({ message: "Edit token is required" });
     }
     
     const listing = await storage.getListing(listingId);
@@ -427,8 +423,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(404).json({ message: "Listing not found" });
     }
     
-    if (listing.editToken !== editToken) {
-      return res.status(403).json({ message: "Invalid edit token" });
+    // Check if the user owns this listing
+    if (listing.userId !== userId) {
+      return res.status(403).json({ message: "You don't have permission to modify this listing" });
     }
     
     const category = await storage.getCategory(categoryId);
@@ -446,18 +443,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Remove a category from a listing
-  router.delete("/listings/:listingId/categories/:categoryId", async (req, res) => {
+  // Remove a category from a listing (requires authentication now)
+  router.delete("/listings/:listingId/categories/:categoryId", isAuthenticated, async (req, res) => {
     const listingId = parseInt(req.params.listingId, 10);
     const categoryId = parseInt(req.params.categoryId, 10);
-    const editToken = req.query.editToken as string;
+    const userId = (req.user as any).id;
     
     if (isNaN(listingId) || isNaN(categoryId)) {
       return res.status(400).json({ message: "Invalid ID parameters" });
-    }
-    
-    if (!editToken) {
-      return res.status(401).json({ message: "Edit token is required" });
     }
     
     const listing = await storage.getListing(listingId);
@@ -466,8 +459,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(404).json({ message: "Listing not found" });
     }
     
-    if (listing.editToken !== editToken) {
-      return res.status(403).json({ message: "Invalid edit token" });
+    // Check if the user owns this listing
+    if (listing.userId !== userId) {
+      return res.status(403).json({ message: "You don't have permission to modify this listing" });
     }
     
     const category = await storage.getCategory(categoryId);

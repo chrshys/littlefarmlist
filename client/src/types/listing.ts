@@ -20,8 +20,7 @@ export interface Listing {
   coordinates?: Coordinates;
   imageUrl?: string;
   createdAt: Date;
-  editToken: string;
-  userId?: number;
+  userId: number; // This is now required
 }
 
 export interface CreateListingForm {
