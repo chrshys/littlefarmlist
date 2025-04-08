@@ -311,72 +311,76 @@ export default function Dashboard() {
                 <p className="text-red-500">Error loading your favorites</p>
               ) : favorites && Array.isArray(favorites) && favorites.length > 0 ? (
                 favorites.map((listing: Listing) => (
-                  <Card key={listing.id} className="overflow-hidden">
-                    <div className="flex flex-col md:flex-row">
-                      {listing.imageUrl && (
-                        <div className="w-full md:w-1/4 h-40 md:h-auto">
-                          <img 
-                            src={listing.imageUrl} 
-                            alt={listing.title} 
-                            className="w-full h-full object-cover"
-                          />
+                  <Card key={listing.id} className="overflow-hidden hover:shadow-md transition-shadow">
+                    {listing.imageUrl ? (
+                      <div className="h-48 overflow-hidden">
+                        <img 
+                          src={listing.imageUrl} 
+                          alt={listing.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="h-48 bg-neutral-100 flex items-center justify-center">
+                        <Sprout className="h-10 w-10 text-neutral-300" />
+                      </div>
+                    )}
+                    
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-start gap-2 mb-1">
+                        <Link href={`/l/${listing.id}`}>
+                          <h3 className="font-medium text-lg text-neutral-800 line-clamp-1 hover:underline cursor-pointer">
+                            {listing.title}
+                          </h3>
+                        </Link>
+                        <Badge variant="outline" className="text-xs flex-shrink-0">
+                          {listing.items.length} {listing.items.length === 1 ? 'item' : 'items'}
+                        </Badge>
+                      </div>
+                      
+                      <p className="text-sm text-neutral-500 mb-3">
+                        {formatDate(listing.createdAt)}
+                      </p>
+                      
+                      {/* Categories display */}
+                      {listing.categories && listing.categories.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mb-2">
+                          {listing.categories.map((category, index) => (
+                            <Badge key={index} variant="outline" className="text-xs">
+                              {category}
+                            </Badge>
+                          ))}
                         </div>
                       )}
-                      <div className="flex-1 p-6">
-                        <CardHeader className="p-0 pb-2">
-                          <div className="flex justify-between items-start">
-                            <Link href={`/l/${listing.id}`}>
-                              <CardTitle className="hover:underline cursor-pointer">{listing.title}</CardTitle>
-                            </Link>
-                            <div className="flex space-x-1">
-                              <Button variant="ghost" size="icon" onClick={() => handleShare(listing)}>
-                                <Share2 className="h-4 w-4" />
-                              </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                onClick={() => handleRemoveFavorite(listing.id)}
-                              >
-                                <HeartOff className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                          {listing.categories && listing.categories.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mt-2">
-                              {listing.categories.map((category, index) => (
-                                <Badge key={index} variant="outline">{category}</Badge>
-                              ))}
-                            </div>
-                          )}
-                        </CardHeader>
-                        <CardContent className="p-0 py-2">
-                          <p className="text-muted-foreground line-clamp-2">{listing.description}</p>
-                          {listing.items && listing.items.length > 0 && (
-                            <div className="mt-2">
-                              <h4 className="font-semibold">Items:</h4>
-                              <ul className="mt-1">
-                                {listing.items.slice(0, 3).map((item, index) => (
-                                  <li key={index} className="flex justify-between text-sm">
-                                    <span>{item.name}</span>
-                                    <span className="font-medium">{formatCurrency(item.price)}</span>
-                                  </li>
-                                ))}
-                                {listing.items.length > 3 && (
-                                  <li className="text-sm text-muted-foreground">
-                                    + {listing.items.length - 3} more items
-                                  </li>
-                                )}
-                              </ul>
-                            </div>
-                          )}
-                        </CardContent>
-                        <CardFooter className="p-0 pt-2 flex justify-between">
-                          <div className="text-sm text-muted-foreground">
-                            Created: {formatDate(listing.createdAt)}
-                          </div>
-                        </CardFooter>
+                      
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {listing.items.slice(0, 3).map((item, index) => (
+                          <Badge key={index} variant="secondary" className="text-xs">
+                            {item.name} – {formatCurrency(item.price)}
+                          </Badge>
+                        ))}
+                        {listing.items.length > 3 && (
+                          <Badge variant="outline" className="text-xs">
+                            +{listing.items.length - 3} more
+                          </Badge>
+                        )}
                       </div>
-                    </div>
+                      
+                      <div className="flex justify-between gap-2">
+                        <Button variant="ghost" size="sm" onClick={() => handleShare(listing)}>
+                          <Share2 className="h-4 w-4 mr-1" />
+                          Share
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => handleRemoveFavorite(listing.id)}
+                        >
+                          <HeartOff className="h-4 w-4 mr-1" />
+                          Remove
+                        </Button>
+                      </div>
+                    </CardContent>
                   </Card>
                 ))
               ) : (
@@ -515,72 +519,76 @@ export default function Dashboard() {
                 <p className="text-red-500">Error loading your favorites</p>
               ) : favorites && Array.isArray(favorites) && favorites.length > 0 ? (
                 favorites.map((listing: Listing) => (
-                  <Card key={listing.id} className="overflow-hidden">
-                    <div className="flex flex-col">
-                      {listing.imageUrl && (
-                        <div className="w-full h-40">
-                          <img 
-                            src={listing.imageUrl} 
-                            alt={listing.title} 
-                            className="w-full h-full object-cover"
-                          />
+                  <Card key={listing.id} className="overflow-hidden hover:shadow-md transition-shadow">
+                    {listing.imageUrl ? (
+                      <div className="h-48 overflow-hidden">
+                        <img 
+                          src={listing.imageUrl} 
+                          alt={listing.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="h-48 bg-neutral-100 flex items-center justify-center">
+                        <Sprout className="h-10 w-10 text-neutral-300" />
+                      </div>
+                    )}
+                    
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-start gap-2 mb-1">
+                        <Link href={`/l/${listing.id}`}>
+                          <h3 className="font-medium text-lg text-neutral-800 line-clamp-1 hover:underline cursor-pointer">
+                            {listing.title}
+                          </h3>
+                        </Link>
+                        <Badge variant="outline" className="text-xs flex-shrink-0">
+                          {listing.items.length} {listing.items.length === 1 ? 'item' : 'items'}
+                        </Badge>
+                      </div>
+                      
+                      <p className="text-sm text-neutral-500 mb-3">
+                        {formatDate(listing.createdAt)}
+                      </p>
+                      
+                      {/* Categories display */}
+                      {listing.categories && listing.categories.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mb-2">
+                          {listing.categories.map((category, index) => (
+                            <Badge key={index} variant="outline" className="text-xs">
+                              {category}
+                            </Badge>
+                          ))}
                         </div>
                       )}
-                      <div className="flex-1 p-6">
-                        <CardHeader className="p-0 pb-2">
-                          <div className="flex justify-between items-start">
-                            <Link href={`/l/${listing.id}`}>
-                              <CardTitle className="hover:underline cursor-pointer">{listing.title}</CardTitle>
-                            </Link>
-                            <div className="flex space-x-1">
-                              <Button variant="ghost" size="icon" onClick={() => handleShare(listing)}>
-                                <Share2 className="h-4 w-4" />
-                              </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                onClick={() => handleRemoveFavorite(listing.id)}
-                              >
-                                <HeartOff className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                          {listing.categories && listing.categories.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mt-2">
-                              {listing.categories.map((category, index) => (
-                                <Badge key={index} variant="outline">{category}</Badge>
-                              ))}
-                            </div>
-                          )}
-                        </CardHeader>
-                        <CardContent className="p-0 py-2">
-                          <p className="text-muted-foreground line-clamp-2">{listing.description}</p>
-                          {listing.items && listing.items.length > 0 && (
-                            <div className="mt-2">
-                              <h4 className="font-semibold">Items:</h4>
-                              <ul className="mt-1">
-                                {listing.items.slice(0, 3).map((item, index) => (
-                                  <li key={index} className="flex justify-between text-sm">
-                                    <span>{item.name}</span>
-                                    <span className="font-medium">{formatCurrency(item.price)}</span>
-                                  </li>
-                                ))}
-                                {listing.items.length > 3 && (
-                                  <li className="text-sm text-muted-foreground">
-                                    + {listing.items.length - 3} more items
-                                  </li>
-                                )}
-                              </ul>
-                            </div>
-                          )}
-                        </CardContent>
-                        <CardFooter className="p-0 pt-2 flex justify-between">
-                          <div className="text-sm text-muted-foreground">
-                            Created: {formatDate(listing.createdAt)}
-                          </div>
-                        </CardFooter>
+                      
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {listing.items.slice(0, 3).map((item, index) => (
+                          <Badge key={index} variant="secondary" className="text-xs">
+                            {item.name} – {formatCurrency(item.price)}
+                          </Badge>
+                        ))}
+                        {listing.items.length > 3 && (
+                          <Badge variant="outline" className="text-xs">
+                            +{listing.items.length - 3} more
+                          </Badge>
+                        )}
                       </div>
-                    </div>
+                      
+                      <div className="flex justify-between gap-2">
+                        <Button variant="ghost" size="sm" onClick={() => handleShare(listing)}>
+                          <Share2 className="h-4 w-4 mr-1" />
+                          Share
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => handleRemoveFavorite(listing.id)}
+                        >
+                          <HeartOff className="h-4 w-4 mr-1" />
+                          Remove
+                        </Button>
+                      </div>
+                    </CardContent>
                   </Card>
                 ))
               ) : (
